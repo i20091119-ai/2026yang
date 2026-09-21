@@ -27,8 +27,15 @@ python3 -m http.server 8080
 # http://localhost:8080
 ```
 
-GitHub Pages 로 배포하려면 저장소 설정 > Pages 에서 Source 를 **GitHub Actions** 로 두면
-`main` 브랜치에 푸시할 때마다 `.github/workflows/pages.yml` 이 자동 배포합니다.
+## 배포 (GitHub Pages)
+
+저장소 설정 > Pages 에서 Source 를 **Deploy from a branch**, 브랜치를 `claude/brave-hypatia-90oo0t` / `(root)` 로 두었습니다.
+이 브랜치에 푸시하면 1~2분 뒤 아래 주소에 반영됩니다.
+
+<https://i20091119-ai.github.io/2026yang/>
+
+(`.nojekyll` 파일은 GitHub 이 Jekyll 빌드를 건너뛰고 파일을 그대로 올리게 합니다.
+`.github/workflows/pages.yml` 은 나중에 `main` 브랜치 + GitHub Actions 방식으로 바꿀 때를 위한 것이라 지금은 동작하지 않습니다.)
 
 ## 공용 점수판 설정 (Supabase 무료 티어)
 

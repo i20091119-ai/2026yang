@@ -78,7 +78,8 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 .logo-card-small img { height: 30px; }
 
 .char-portrait { display: block; margin: -8px auto 6px; height: clamp(120px, 26vh, 200px); width: auto; max-width: 100%; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); }
-.char-portrait.small { height: clamp(80px, 16vh, 120px); margin-top: -4px; }
+.char-portrait.small { height: clamp(80px, 14vh, 120px); margin-top: -4px; }
+@media (max-height: 820px) { .char-portrait.small { display: none !important; } }
 
 /* ---------- 버튼 ---------- */
 .btn {
@@ -173,7 +174,7 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 .rank-list li { display: flex; justify-content: space-between; padding: 8px 14px; border-radius: 10px; font-family: var(--font-title); font-size: 20px; }
 .rank-list li:nth-child(odd) { background: rgba(255,255,255,0.05); }
 .rank-list li.mine { background: rgba(255, 209, 102, 0.22); color: var(--gold); outline: 1px solid var(--gold); }
-.rank-list.compact li { padding: 4px 10px; font-size: 17px; }
+.rank-list.compact li { padding: 3px 10px; font-size: 16px; }
 .rank-no { color: #ffb997; }
 .rank-no::after { content: " …"; color: rgba(255,255,255,0.4); }
 .rank-loading, .rank-empty { justify-content: center !important; font-size: 15px !important; color: #cfc2b4; font-family: var(--font-body) !important; }

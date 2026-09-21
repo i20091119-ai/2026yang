@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>백호장군 안이명: 숫자 베기</title>
+  <meta name="description" content="양산의 의병장 안이명 장군과 함께 합성수를 베어 소인수로 나누는 수학 게임">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- 게임 중 HUD -->
+  <div id="hud" class="hud hidden">
+    <div class="hud-left">
+      <div class="hud-score" id="hud-score">0</div>
+      <div class="hud-diff" id="hud-diff"></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-combo" id="hud-combo">x1</div>
+      <div class="hud-lives" id="hud-lives"></div>
+    </div>
+    <button class="hud-pause" id="btn-pause" aria-label="일시정지">II</button>
+  </div>
+
+  <!-- 시작 화면 -->
+  <section id="screen-title" class="screen">
+    <div class="panel title-panel">
+      <img class="char-portrait" src="assets/char/anyimyeong.png" alt="" onerror="this.style.display='none'">
+      <div class="title-tag">양산 임진왜란 의병장</div>
+      <h1 class="title-main"><span class="title-white">백호장군</span> 안이명</h1>
+      <div class="title-sub">숫자 베기</div>
+      <p class="title-desc">
+        튀어오르는 숫자를 베어 <b>소인수</b>로 나누세요.<br>
+        나뉘지 않는 <b>소수</b>를 베면 목숨을 잃습니다.
+      </p>
+      <div class="btn-col">
+        <button class="btn btn-primary" data-go="screen-difficulty">출진</button>
+        <div class="btn-row">
+          <button class="btn btn-ghost" data-go="screen-howto">게임 방법</button>
+          <button class="btn btn-ghost" data-go="screen-story">안이명 이야기</button>
+          <button class="btn btn-ghost" data-go="screen-ranking">순위표</button>
+        </div>
+        <button class="btn btn-ghost btn-mute" type="button">🔊 소리 켜짐</button>
+      </div>
+      <a class="logo-card" href="https://www.gnmc.kr" target="_blank" rel="noopener">
+        <img src="assets/gnmc-logo.webp" alt="경남수학문화관 양산수학체험센터">
+      </a>
+    </div>
+  </section>
+
+  <!-- 난이도 선택 -->
+  <section id="screen-difficulty" class="screen hidden">
+    <div class="panel">
+      <h2>계급을 고르세요</h2>
+      <div class="diff-list">
+        <button class="diff-btn diff-uibyeong" data-diff="uibyeong">
+          <span class="diff-badge">義</span>
+          <span class="diff-text"><b>의병</b><small>20 이하 · 천천히</small></span>
+        </button>
+        <button class="diff-btn diff-jangsu" data-diff="jangsu">
+          <span class="diff-badge">將</span>
+          <span class="diff-text"><b>장수</b><small>60 이하 · 보통</small></span>
+        </button>
+        <button class="diff-btn diff-baekho" data-diff="baekho">
+          <span class="diff-badge">虎</span>
+          <span class="diff-text"><b>백호장군</b><small>150 이하 · 빠르게</small></span>
+        </button>
+      </div>
+      <button class="btn btn-ghost" data-go="screen-title">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 게임 방법 -->
+  <section id="screen-howto" class="screen hidden">
+    <div class="panel panel-text">
+      <h2>게임 방법</h2>
+      <ol class="howto">
+        <li><b>아래에서 숫자가 튀어오릅니다.</b> 손가락이나 마우스로 숫자를 그어 베세요.</li>
+        <li><b>합성수</b>(예: 18)를 베면 두 개의 약수(예: 3 × 6)로 나뉩니다.</li>
+        <li>나뉜 숫자가 아직 합성수라면 <b>다시 베어</b> 계속 나눌 수 있습니다. (6 → 2 × 3)</li>
+        <li><b>소수</b>(2, 3, 5, 7, 11 …)는 더 나눌 수 없습니다. 소수는 베지 말고 그냥 보내세요.</li>
+        <li><b>합성수를 베지 못하고 떨어뜨리면</b> 목숨을 하나 잃습니다.</li>
+        <li>전투는 <b>양산 → 밀양 → 청도 → 울산 → 대구</b> 순으로 이어집니다. 양산·밀양에서는 소수를 베어도 벌칙이 없지만, 청도·울산에서는 <b>감점</b>, 대구에서는 <b>목숨</b>을 잃습니다.</li>
+        <li>연속으로 맞게 베면 <b>배수(x2, x3 …)</b>가 올라가 점수가 커집니다. 합성수를 놓치거나, 벌칙이 있는 곳에서 소수를 베면 초기화됩니다.</li>
+        <li>목숨 3개를 모두 잃으면 게임이 끝나고, 점수가 공용 순위표에 기록됩니다. 이름은 남기지 않습니다.</li>
+      </ol>
+      <button class="btn btn-ghost" data-go="screen-title">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 안이명 이야기 -->
+  <section id="screen-story" class="screen hidden">
+    <div class="panel panel-text">
+      <h2>백호장군 안이명 (安以命)</h2>
+      <p>조선 중기 경상남도 양산에서 태어났습니다. 본관은 광주(廣州)이며, 1590년(선조 23년) 무과에 합격했습니다. 백호장군(白虎將軍)이라 불렸습니다.</p>
+      <p>1592년 임진왜란이 일어나자 아버지 안근(安瑾), 형 안시명(安諟命), 사촌 안신명(安信命), 당숙 안도수(安導琇) 등 온 집안이 함께 의병을 일으켜 양산을 지켰습니다. 양산이 함락된 뒤에도 밀양, 청도, 울산, 대구 등지에서 왜군과 싸움을 이어갔습니다.</p>
+      <h3>남아 있는 자취</h3>
+      <ul>
+        <li><b>안이명 묘</b> · 양산시 상북면 대석리</li>
+        <li><b>소계서원</b> · 1783년(정조 7) 건립, 양산시 상북면 소토로 38. 안근, 안시명, 안이명 등 광주 안씨 문중의 임진왜란 공신 9위를 함께 모시며 지금도 제향이 이어집니다.</li>
+        <li><b>효충사</b> · 양산시 상북면. 안씨 문중 충신을 제향합니다.</li>
+        <li><b>무과교지</b> · 경남유형문화재 제149호</li>
+      </ul>
+      <p class="story-note">이 게임에서 합성수를 베어 소인수로 나누는 것은 왜적을 물리치는 일이고, 소수를 잘못 베는 것은 아군을 오인하는 실수입니다. 백호장군처럼 정확하게 베어 보세요.</p>
+      <button class="btn btn-ghost" data-go="screen-title">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 순위표 -->
+  <section id="screen-ranking" class="screen hidden">
+    <div class="panel">
+      <h2>순위표</h2>
+      <div class="tabs" id="ranking-tabs">
+        <button class="tab active" data-diff="uibyeong">의병</button>
+        <button class="tab" data-diff="jangsu">장수</button>
+        <button class="tab" data-diff="baekho">백호장군</button>
+      </div>
+      <ol class="rank-list" id="ranking-list"></ol>
+      <div class="rank-note" id="ranking-note"></div>
+      <button class="btn btn-ghost" data-go="screen-title">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 일시정지 -->
+  <section id="screen-pause" class="screen hidden overlay">
+    <div class="panel">
+      <h2>잠시 멈춤</h2>
+      <div class="btn-col">
+        <button class="btn btn-primary" id="btn-resume">계속하기</button>
+        <button class="btn btn-ghost btn-mute" type="button">🔊 소리 켜짐</button>
+        <button class="btn btn-ghost" id="btn-quit">그만두기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 게임 오버 -->
+  <section id="screen-gameover" class="screen hidden overlay">
+    <div class="panel gameover-panel">
+      <img class="char-portrait small" src="assets/char/anyimyeong.png" alt="" onerror="this.style.display='none'">
+      <h2 class="gameover-title">전투 종료</h2>
+      <div class="gameover-diff" id="gameover-diff"></div>
+      <div class="gameover-body">
+        <ol class="rank-list compact" id="gameover-list"></ol>
+        <div class="final">
+          <div class="final-label">최종 점수</div>
+          <div class="final-score" id="final-score">0</div>
+          <div class="final-stats" id="final-stats"></div>
+          <div class="rank-note" id="gameover-note"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-retry">다시 출진</button>
+        <button class="btn btn-ghost" data-go="screen-title" id="btn-home">처음으로</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/math.js"></script>
+  <script src="js/scores.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

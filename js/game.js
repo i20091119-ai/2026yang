@@ -20,6 +20,9 @@
   ];
 
   const MAX_LIVES = 3;
+  // 마지막 진(대구) 총공세: 도착 후 SURGE_DELAY 가 지나면 SURGE_RAMP 동안 점점 빨라진다
+  const SURGE_DELAY = 30000;
+  const SURGE_RAMP = 45000;
   const COLORS = {
     blade: "#ffffff",
     bladeGlow: "rgba(170, 220, 255, 0.9)",
@@ -205,6 +208,7 @@
       this.numbers = []; this.particles = []; this.floaters = []; this.trail = [];
       this.score = 0; this.lives = MAX_LIVES; this.streak = 0; this.multiplier = 1;
       this.stageIndex = 0; this.splits = 0; this.primeCuts = 0; this.misses = 0;
+      this.stageStart = 0; this.surgeShown = false;
       this.elapsed = 0; this.spawnTimer = 600; this.stageBanner = { text: "", sub: "", until: 0 };
       this.running = true; this.paused = false; this.over = false;
       this.lastTs = performance.now();
@@ -230,6 +234,18 @@
     showBanner(index) {
       const s = STAGES[index];
       this.stageBanner = { text: "제" + (index + 1) + "진 · " + s.name, sub: s.hint, until: performance.now() + 2200 };
+    }
+
+    showText(text, sub) {
+      this.stageBanner = { text, sub, until: performance.now() + 2200 };
+    }
+
+    // 0(평소) ~ 1(최대 총공세). 마지막 진에서만 커진다.
+    surge() {
+      if (this.stageIndex !== STAGES.length - 1) return 0;
+      const t = this.elapsed - this.stageStart - SURGE_DELAY;
+      if (t <= 0) return 0;
+      return Math.min(1, t / SURGE_RAMP);
     }
 
     // ----- 숫자 생성 -----
@@ -267,17 +283,18 @@
       return clamp(base, 30, 76);
     }
 
-    gravity() { return this.H * 0.7; } // 낮을수록 공중에 오래 머문다
+    gravity() { return this.H * 0.7 * (1 + 0.7 * this.surge()); } // 총공세 때 최대 1.7배 빨리 떨어진다
 
     currentSpawnInterval() {
       const d = this.diff;
       const factor = Math.pow(0.86, this.stageIndex) * Math.pow(0.985, Math.floor(this.elapsed / 5000));
-      return Math.max(d.spawnMin, d.spawnBase * factor);
+      const base = Math.max(d.spawnMin, d.spawnBase * factor);
+      return base * (1 - 0.55 * this.surge()); // 총공세 때 간격이 절반 이하로
     }
 
     maxOnScreen() {
       const [lo, hi] = this.diff.onScreen;
-      return Math.round(lo + (hi - lo) * Math.min(1, this.stageIndex / (STAGES.length - 1)));
+      return Math.round(lo + (hi - lo) * Math.min(1, this.stageIndex / (STAGES.length - 1))) + Math.round(3 * this.surge());
     }
 
     // ----- 베기 판정 -----
@@ -378,6 +395,7 @@
       const next = this.stageIndex + 1;
       if (next < STAGES.length && this.splits >= this.diff.splitsPerStage * next) {
         this.stageIndex = next;
+        this.stageStart = this.elapsed;
         if (window.Sound) Sound.play("stage");
         this.showBanner(next);
         this.emit("stage", this.stageInfo());
@@ -424,6 +442,12 @@
 
     update(dt, now) {
       this.elapsed += dt * 1000;
+
+      if (!this.surgeShown && this.surge() > 0) {
+        this.surgeShown = true;
+        if (window.Sound) Sound.play("stage");
+        this.showText("왜군 총공세!", "점점 빨라집니다. 버텨 보세요!");
+      }
 
       // 생성
       this.spawnTimer -= dt * 1000;

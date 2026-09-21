@@ -179,6 +179,97 @@
   });
   window.__renderHowto = renderHowto;
 
+  // ----- 소수와 합성수 배우기 -----
+  const learnGrid = $("#learn-grid");
+  const learnResult = $("#learn-result");
+  let learnBack = "screen-title";
+  let sieveRunning = false;
+  let sieveTimer = null;
+
+  function buildLearnGrid() {
+    learnGrid.innerHTML = "";
+    for (let n = 1; n <= 100; n++) {
+      const b = document.createElement("button");
+      b.textContent = n; b.dataset.n = n; b.type = "button";
+      if (n === 1) b.classList.add("one");
+      b.addEventListener("click", () => pickNumber(n));
+      learnGrid.appendChild(b);
+    }
+  }
+
+  function cellOf(n) { return learnGrid.querySelector('[data-n="' + n + '"]'); }
+
+  function pickNumber(n) {
+    if (sieveRunning) return;
+    $$("#learn-grid .picked").forEach((el) => el.classList.remove("picked"));
+    const cell = cellOf(n); cell.classList.add("picked");
+    if (n === 1) {
+      learnResult.innerHTML = '<span class="big">1</span>은 소수도 합성수도 아니에요.';
+      return;
+    }
+    const pairs = NumMath.factorPairs(n);
+    if (pairs.length === 0) {
+      cell.classList.add("prime");
+      learnResult.innerHTML = '<span class="big c-prime">' + n + '</span>은(는) <b class="c-prime">소수</b>!<br>1 × ' + n + ' 말고는 나눌 수 없어요. 게임에서는 그냥 보내세요.';
+    } else {
+      cell.classList.add("comp");
+      const shown = pairs.map((p) => p[0] + " × " + p[1]).join(" = ");
+      learnResult.innerHTML = '<span class="big c-comp">' + n + '</span>은(는) <b class="c-comp">합성수</b>!<br>' + n + " = " + shown + '<br>게임에서는 베면 두 조각으로 나뉘어요.';
+    }
+  }
+
+  function resetLearn() {
+    if (sieveTimer) { clearTimeout(sieveTimer); sieveTimer = null; }
+    sieveRunning = false;
+    $("#learn-sieve").disabled = false;
+    buildLearnGrid();
+    learnResult.textContent = "숫자를 눌러 보세요";
+  }
+
+  // 에라토스테네스의 체: 2부터 차례로 소수를 찾고 그 배수를 지운다
+  function runSieve() {
+    if (sieveRunning) return;
+    resetLearn();
+    sieveRunning = true; $("#learn-sieve").disabled = true;
+    const crossed = new Set([1]);
+    cellOf(1).classList.add("crossed");
+    let p = 2;
+    const stepPrime = () => {
+      while (p <= 100 && crossed.has(p)) p++;
+      if (p > 100) {
+        sieveRunning = false; $("#learn-sieve").disabled = false;
+        learnResult.innerHTML = '남은 <b class="c-prime">노란 칸</b>이 전부 소수예요. 1부터 100까지 소수는 <b class="c-prime">25개</b>!';
+        return;
+      }
+      const cell = cellOf(p); cell.classList.add("prime", "marking");
+      learnResult.innerHTML = '<span class="big c-prime">' + p + '</span>은(는) 소수! 이제 ' + p + '의 배수를 모두 지워요.';
+      if (p > 10) { // 10 을 넘으면 배수가 이미 다 지워져 있으니 빠르게
+        for (let m = p * 2; m <= 100; m += p) crossed.add(m);
+        p++; sieveTimer = setTimeout(stepPrime, 180); return;
+      }
+      let m = p * 2;
+      const crossNext = () => {
+        while (m <= 100 && crossed.has(m)) m += p;
+        if (m > 100) { p++; sieveTimer = setTimeout(stepPrime, 700); return; }
+        crossed.add(m); const c = cellOf(m); c.classList.add("crossed", "marking");
+        m += p; sieveTimer = setTimeout(crossNext, 55);
+      };
+      sieveTimer = setTimeout(crossNext, 600);
+    };
+    sieveTimer = setTimeout(stepPrime, 300);
+  }
+
+  $("#learn-sieve").addEventListener("click", runSieve);
+  $("#learn-reset").addEventListener("click", resetLearn);
+  $$('[data-go="screen-learn"]').forEach((el) => el.addEventListener("click", (e) => {
+    e.preventDefault(); learnBack = el.getAttribute("data-back") || "screen-title"; resetLearn();
+  }));
+  $("#learn-back").addEventListener("click", () => {
+    resetLearn(); show(learnBack);
+    if (learnBack === "screen-howto") { howtoIndex = 3; renderHowto(); } // 4번 슬라이드로 복귀
+  });
+  buildLearnGrid();
+
   // ----- 시작 -----
   renderHowto();
   setLives(3);

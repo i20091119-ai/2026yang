@@ -206,3 +206,30 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
   .logo-card { margin-top: 12px; }
   .logo-card img { height: 36px; }
 }
+
+/* ---------- 소수와 합성수 배우기 ---------- */
+.learn-panel { max-width: 520px; padding: 18px 16px 16px; }
+.learn-panel h2 { margin-bottom: 10px; }
+.learn-intro { text-align: left; font-size: 15px; line-height: 1.6; }
+.learn-intro p { margin: 0 0 8px; }
+.learn-note { font-size: 13px; color: #cfc2b4; }
+.c-prime { color: #ffd166; }
+.c-comp { color: #8fe36b; }
+.learn-tools { display: flex; gap: 8px; justify-content: center; margin: 8px 0 10px; }
+.learn-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.learn-grid button {
+  aspect-ratio: 1; border: none; border-radius: 8px; font-family: var(--font-title); font-size: 15px;
+  background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; padding: 0; transition: transform 0.1s, background 0.2s;
+}
+.learn-grid button:active { transform: scale(0.9); }
+.learn-grid button.one { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.35); }
+.learn-grid button.prime { background: #b8860b; color: #fff; box-shadow: inset 0 0 0 2px #ffd166; }
+.learn-grid button.comp { background: rgba(143, 227, 107, 0.18); color: #b9f0a3; }
+.learn-grid button.crossed { background: rgba(255, 90, 90, 0.18); color: rgba(255,255,255,0.35); text-decoration: line-through; }
+.learn-grid button.picked { outline: 3px solid #fff; outline-offset: -1px; }
+.learn-grid button.marking { animation: mark-pop 0.35s ease; }
+@keyframes mark-pop { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.learn-result { min-height: 3.4em; margin: 12px 0 10px; font-size: 17px; line-height: 1.5; font-family: var(--font-title); }
+.learn-result .big { font-size: 26px; }
+.learn-link { color: var(--gold); text-decoration: underline; }
+@media (max-width: 380px) { .learn-grid button { font-size: 13px; border-radius: 6px; } }

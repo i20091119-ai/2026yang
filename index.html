@@ -41,6 +41,7 @@
           <button class="btn btn-ghost" data-go="screen-howto">게임 방법</button>
           <button class="btn btn-ghost" data-go="screen-story">안이명 이야기</button>
           <button class="btn btn-ghost" data-go="screen-ranking">순위표</button>
+          <button class="btn btn-ghost" data-go="screen-learn">소수란?</button>
         </div>
         <button class="btn btn-ghost btn-mute" type="button">🔊 소리 켜짐</button>
       </div>
@@ -91,7 +92,7 @@
         </div>
         <div class="howto-slide">
           <img src="assets/howto/step-4.jpg" alt="소수 7을 베자 소수라는 안내가 뜨는 장면">
-          <p><b>소수는 더 나눌 수 없습니다.</b><br>2, 3, 5, 7, 11 … 같은 소수는 베지 말고 그냥 보내세요.</p>
+          <p><b>소수는 더 나눌 수 없습니다.</b><br>2, 3, 5, 7, 11 … 같은 소수는 베지 말고 그냥 보내세요. <a href="#" class="learn-link" data-go="screen-learn" data-back="screen-howto">소수가 뭐예요?</a></p>
         </div>
         <div class="howto-slide">
           <img src="assets/howto/step-5.jpg" alt="14를 놓쳐 목숨이 하나 줄어든 장면">
@@ -116,6 +117,25 @@
         <button class="btn btn-primary btn-small" id="howto-next">다음 ▶</button>
       </div>
       <button class="btn btn-ghost btn-small" data-go="screen-title">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 소수와 합성수 배우기 -->
+  <section id="screen-learn" class="screen hidden">
+    <div class="panel learn-panel">
+      <h2>소수와 합성수</h2>
+      <div class="learn-intro">
+        <p><b class="c-prime">소수</b>는 1과 자기 자신으로만 나누어지는 수예요.<br><span class="c-prime">2, 3, 5, 7, 11, 13 …</span> 더 이상 쪼갤 수 없는 <b>덩어리 수</b>입니다.</p>
+        <p><b class="c-comp">합성수</b>는 다른 수의 곱으로 만들 수 있는 수예요.<br><span class="c-comp">12 = 3 × 4 = 2 × 6</span> 처럼 <b>쪼갤 수 있는 수</b>입니다.</p>
+        <p class="learn-note">1은 소수도 합성수도 아니에요. 그래서 게임에는 나오지 않습니다.</p>
+      </div>
+      <div class="learn-tools">
+        <button class="btn btn-ghost btn-small" id="learn-sieve">체로 걸러 보기</button>
+        <button class="btn btn-ghost btn-small" id="learn-reset">다시</button>
+      </div>
+      <div class="learn-grid" id="learn-grid"></div>
+      <div class="learn-result" id="learn-result">숫자를 눌러 보세요</div>
+      <button class="btn btn-ghost" data-go="screen-title" id="learn-back">돌아가기</button>
     </div>
   </section>
 

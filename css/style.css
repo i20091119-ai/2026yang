@@ -70,6 +70,8 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
   background: #fff; border-radius: 14px; text-decoration: none;
 }
 .logo-card img { display: block; height: 52px; width: auto; max-width: 100%; }
+.logo-card-small { margin-top: 16px; padding: 6px 10px; }
+.logo-card-small img { height: 30px; }
 
 .char-portrait { display: block; margin: -8px auto 6px; height: clamp(120px, 26vh, 200px); width: auto; max-width: 100%; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)); }
 .char-portrait.small { height: clamp(80px, 16vh, 120px); margin-top: -4px; }

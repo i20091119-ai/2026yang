@@ -245,7 +245,8 @@
       const W = this.W, H = this.H;
       const x = rand(W * 0.18, W * 0.82);
       const g = this.gravity();
-      const h = rand(H * 0.5, H * 0.78) * (0.9 + 0.1 * Math.min(this.stageIndex, 3) / 3);
+      // 화면 위쪽 62~88% 높이까지 올라갔다 천천히 내려온다
+      const h = rand(H * 0.62, H * 0.88) * (0.95 + 0.05 * Math.min(this.stageIndex, 3) / 3);
       const vy = -Math.sqrt(2 * g * h);
       const vx = (W / 2 - x) * rand(0.15, 0.45) + rand(-40, 40);
       this.numbers.push(this.makeNumber(value, x, H + 40, vx, vy));
@@ -266,7 +267,7 @@
       return clamp(base, 30, 76);
     }
 
-    gravity() { return this.H * 1.1; }
+    gravity() { return this.H * 0.7; } // 낮을수록 공중에 오래 머문다
 
     currentSpawnInterval() {
       const d = this.diff;
@@ -302,7 +303,7 @@
     }
 
     onCompositeCut(n, angle) {
-      const pair = M.balancedPair(n.value);
+      const pair = M.randomPair(n.value); // 약수 쌍은 무작위
       const [a, b] = pair;
       this.streak += 1;
       this.multiplier = Math.min(5, 1 + Math.floor(this.streak / 4));

@@ -16,6 +16,7 @@
     if (el) el.classList.remove("hidden");
     $("#hud").classList.toggle("hidden", id !== "screen-play");
     if (id === "screen-ranking") renderRanking(currentDiff);
+    if (id === "screen-howto" && window.__renderHowto) { howtoIndex = 0; window.__renderHowto(); }
   }
 
   $$("[data-go]").forEach((btn) => {
@@ -150,7 +151,36 @@
     t.addEventListener("click", () => renderRanking(t.getAttribute("data-diff")));
   });
 
+  // ----- 게임 방법 슬라이드 -----
+  const howtoSlides = $$("#howto-slides .howto-slide");
+  let howtoIndex = 0;
+  function renderHowto() {
+    howtoSlides.forEach((el, i) => el.classList.toggle("active", i === howtoIndex));
+    $("#howto-count").textContent = (howtoIndex + 1) + " / " + howtoSlides.length;
+    const dots = $("#howto-dots");
+    dots.innerHTML = "";
+    howtoSlides.forEach((_, i) => { const d = document.createElement("span"); if (i === howtoIndex) d.className = "active"; dots.appendChild(d); });
+    $("#howto-prev").disabled = howtoIndex === 0;
+    $("#howto-next").textContent = howtoIndex === howtoSlides.length - 1 ? "출진!" : "다음 ▶";
+  }
+  $("#howto-prev").addEventListener("click", () => { if (howtoIndex > 0) { howtoIndex -= 1; renderHowto(); } });
+  $("#howto-next").addEventListener("click", () => {
+    if (howtoIndex < howtoSlides.length - 1) { howtoIndex += 1; renderHowto(); }
+    else { howtoIndex = 0; renderHowto(); show("screen-difficulty"); }
+  });
+  // 슬라이드 위에서 좌우로 밀어 넘기기
+  let swipeX = null;
+  $("#howto-slides").addEventListener("pointerdown", (e) => { swipeX = e.clientX; });
+  $("#howto-slides").addEventListener("pointerup", (e) => {
+    if (swipeX == null) return;
+    const dx = e.clientX - swipeX; swipeX = null;
+    if (dx < -40 && howtoIndex < howtoSlides.length - 1) { howtoIndex += 1; renderHowto(); }
+    else if (dx > 40 && howtoIndex > 0) { howtoIndex -= 1; renderHowto(); }
+  });
+  window.__renderHowto = renderHowto;
+
   // ----- 시작 -----
+  renderHowto();
   setLives(3);
   show("screen-title");
 })();

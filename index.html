@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>백호장군 안이명: 숫자 베기</title>
   <meta name="description" content="양산의 의병장 안이명 장군과 함께 합성수를 베어 소인수로 나누는 수학 게임">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/fonts/Jua.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -74,21 +72,50 @@
     </div>
   </section>
 
-  <!-- 게임 방법 -->
+  <!-- 게임 방법: 한 장씩 넘겨 보는 슬라이드 -->
   <section id="screen-howto" class="screen hidden">
-    <div class="panel panel-text">
-      <h2>게임 방법</h2>
-      <ol class="howto">
-        <li><b>아래에서 숫자가 튀어오릅니다.</b> 손가락이나 마우스로 숫자를 그어 베세요.</li>
-        <li><b>합성수</b>(예: 18)를 베면 두 개의 약수(예: 3 × 6)로 나뉩니다.</li>
-        <li>나뉜 숫자가 아직 합성수라면 <b>손을 떼고 다시 베어</b> 계속 나눌 수 있습니다. (16 → 4 × 4 → 2 × 2, 2 × 2) 한 번 그은 획으로는 한 단계만 나뉩니다.</li>
-        <li><b>소수</b>(2, 3, 5, 7, 11 …)는 더 나눌 수 없습니다. 소수는 베지 말고 그냥 보내세요.</li>
-        <li><b>합성수를 베지 못하고 떨어뜨리면</b> 목숨을 하나 잃습니다.</li>
-        <li>전투는 <b>양산 → 밀양 → 청도 → 울산 → 대구</b> 순으로 이어집니다. 양산·밀양에서는 소수를 베어도 벌칙이 없지만, 청도·울산에서는 <b>감점</b>, 대구에서는 <b>목숨</b>을 잃습니다.</li>
-        <li>연속으로 맞게 베면 <b>배수(x2, x3 …)</b>가 올라가 점수가 커집니다. 합성수를 놓치거나, 벌칙이 있는 곳에서 소수를 베면 초기화됩니다.</li>
-        <li>목숨 3개를 모두 잃으면 게임이 끝나고, 점수가 공용 순위표에 기록됩니다. 이름은 남기지 않습니다.</li>
-      </ol>
-      <button class="btn btn-ghost" data-go="screen-title">돌아가기</button>
+    <div class="panel howto-panel">
+      <h2>게임 방법 <span class="howto-count" id="howto-count">1 / 8</span></h2>
+      <div class="howto-slides" id="howto-slides">
+        <div class="howto-slide">
+          <img src="assets/howto/step-1.jpg" alt="숫자가 아래에서 튀어오르는 장면">
+          <p><b>숫자가 아래에서 튀어오릅니다.</b><br>손가락이나 마우스로 숫자를 그어서 베세요.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-2.jpg" alt="18을 베어 3과 6으로 나뉘는 장면">
+          <p><b>합성수를 베면 두 약수로 나뉩니다.</b><br>18을 베면 3 × 6 처럼 두 조각이 됩니다.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-3.jpg" alt="6을 다시 베어 2와 3으로 나뉘는 장면">
+          <p><b>나뉜 수가 아직 합성수면 또 벨 수 있습니다.</b><br>손을 떼고 다시 그으세요. 6 → 2 × 3. 한 획에 한 단계씩만 나뉩니다.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-4.jpg" alt="소수 7을 베자 소수라는 안내가 뜨는 장면">
+          <p><b>소수는 더 나눌 수 없습니다.</b><br>2, 3, 5, 7, 11 … 같은 소수는 베지 말고 그냥 보내세요.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-5.jpg" alt="14를 놓쳐 목숨이 하나 줄어든 장면">
+          <p><b>합성수를 놓치면 목숨을 하나 잃습니다.</b><br>베지 못하고 떨어뜨린 합성수 하나마다 虎 하나가 꺼집니다.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-6.jpg" alt="제3진 청도 배너가 뜨는 장면">
+          <p><b>전투는 양산 → 밀양 → 청도 → 울산 → 대구로 이어집니다.</b><br>양산·밀양에서는 소수를 베어도 괜찮지만, 청도·울산에서는 감점, 대구에서는 목숨을 잃습니다.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-7.jpg" alt="배수 x3으로 점수가 크게 오르는 장면">
+          <p><b>연속으로 맞게 베면 배수가 올라갑니다.</b><br>x2, x3 … 최대 x5. 놓치거나 벌칙이 있는 곳에서 소수를 베면 x1로 돌아갑니다.</p>
+        </div>
+        <div class="howto-slide">
+          <img src="assets/howto/step-8.jpg" alt="게임 오버 화면과 순위표">
+          <p><b>목숨 3개를 모두 잃으면 전투가 끝납니다.</b><br>점수는 공용 순위표에 기록됩니다. 이름은 남기지 않습니다.</p>
+        </div>
+      </div>
+      <div class="howto-nav">
+        <button class="btn btn-ghost" id="howto-prev">◀ 이전</button>
+        <div class="howto-dots" id="howto-dots"></div>
+        <button class="btn btn-primary btn-small" id="howto-next">다음 ▶</button>
+      </div>
+      <button class="btn btn-ghost btn-small" data-go="screen-title">돌아가기</button>
     </div>
   </section>
 

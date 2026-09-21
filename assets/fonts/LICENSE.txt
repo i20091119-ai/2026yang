@@ -1,0 +1,6 @@
+Jua (배달의민족 주아체, Woowa Brothers) 와 Gowun Dodum (고운돋움, Yanghee Ryu) 은
+SIL Open Font License 1.1 로 배포되는 글꼴입니다. Google Fonts 에서 받아
+KS X 1001 한글 2350자 + 기본 라틴 문자로 서브셋한 woff2 파일입니다.
+https://fonts.google.com/specimen/Jua
+https://fonts.google.com/specimen/Gowun+Dodum
+https://openfontlicense.org

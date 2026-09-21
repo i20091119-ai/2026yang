@@ -1,3 +1,6 @@
+@font-face { font-family: 'Jua'; src: url('../assets/fonts/Jua.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Gowun Dodum'; src: url('../assets/fonts/GowunDodum.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+
 :root {
   --ink: #120e12;
   --paper: rgba(20, 14, 18, 0.86);
@@ -58,9 +61,10 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 }
 .title-white { color: #ffffff; }
 .title-sub {
-  display: inline-block; margin-top: 10px; padding: 4px 16px; border-radius: 999px;
-  background: linear-gradient(90deg, var(--red), var(--orange), var(--green), var(--blue), var(--purple));
-  color: #fff; font-family: var(--font-title); font-size: 20px; letter-spacing: 4px;
+  display: inline-block; margin-top: 10px; padding: 4px 18px; border-radius: 999px;
+  background: rgba(107, 42, 31, 0.55); border: 1px solid rgba(255, 209, 102, 0.55);
+  color: var(--cream); font-family: var(--font-title); font-size: 20px; letter-spacing: 4px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .title-desc { margin: 18px 0 20px; font-size: 15px; line-height: 1.6; color: #f3e3cf; }
 .title-desc b { color: var(--gold); }
@@ -113,10 +117,27 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 .diff-text b { font-family: var(--font-title); font-size: 24px; letter-spacing: 1px; }
 .diff-text small { font-size: 14px; opacity: 0.9; }
 
-/* ---------- 게임 방법 ---------- */
-.howto { padding-left: 22px; margin: 0 0 16px; }
-.howto li { margin-bottom: 9px; }
-.howto b { color: var(--gold); }
+/* ---------- 게임 방법 (슬라이드) ---------- */
+.howto-panel { max-width: 440px; padding: 18px 18px 16px; }
+.howto-panel h2 { margin-bottom: 12px; }
+.howto-count { display: inline-block; margin-left: 8px; font-size: 16px; color: #ffb997; vertical-align: middle; }
+.howto-slides { position: relative; }
+.howto-slide { display: none; }
+.howto-slide.active { display: block; animation: howto-in 0.25s ease; }
+@keyframes howto-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+.howto-slide img {
+  display: block; width: 100%; max-height: 46vh; object-fit: contain; border-radius: 14px;
+  background: #000; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.howto-slide p { margin: 12px 4px 4px; font-size: 16px; line-height: 1.6; min-height: 4.8em; text-align: left; }
+.howto-slide p b { color: var(--gold); font-family: var(--font-title); font-size: 18px; }
+.howto-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 10px; }
+.howto-nav .btn { flex: 0 0 auto; }
+.howto-dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.howto-dots span { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+.howto-dots span.active { background: var(--gold); }
+.btn-small { font-size: 17px; padding: 11px 16px; }
+#howto-prev[disabled] { opacity: 0.35; }
 
 /* ---------- HUD ---------- */
 .hud {

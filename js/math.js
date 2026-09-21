@@ -31,6 +31,15 @@
     return pairs[Math.floor(Math.random() * pairs.length)];
   }
 
+  // 균형 잡힌 쌍(두 약수가 가까운 것)을 우선 고른다. 16 → 4×4, 36 → 6×6, 12 → 3×4.
+  // 다만 30% 정도는 다른 쌍도 나와서 여러 분해 방법을 볼 수 있게 한다.
+  function balancedPair(n) {
+    const pairs = factorPairs(n); // a 오름차순이므로 마지막 쌍이 가장 균형 잡힘
+    if (pairs.length === 0) return null;
+    if (pairs.length === 1 || Math.random() < 0.7) return pairs[pairs.length - 1];
+    return pairs[Math.floor(Math.random() * (pairs.length - 1))];
+  }
+
   function primesUpTo(max) {
     const list = [];
     for (let i = 2; i <= max; i++) if (isPrime(i)) list.push(i);
@@ -43,5 +52,5 @@
     return list;
   }
 
-  window.NumMath = { isPrime, factorPairs, randomPair, primesUpTo, compositesUpTo };
+  window.NumMath = { isPrime, factorPairs, randomPair, balancedPair, primesUpTo, compositesUpTo };
 })();

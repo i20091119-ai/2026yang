@@ -176,6 +176,7 @@
         if (!this.running || this.paused) return;
         cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
         this.pointerDown = true;
+        this.strokeId = (this.strokeId || 0) + 1;
         const p = getPos(e);
         this.lastPointer = p;
         this.trail.push({ x: p.x, y: p.y, t: performance.now() });
@@ -282,6 +283,8 @@
     slice(ax, ay, bx, by) {
       for (const n of this.numbers) {
         if (n.dead || n.bounced) continue; // 이미 튕겨낸 소수는 다시 베이지 않는다
+        if (n.bornStroke === this.strokeId) continue; // 같은 획으로 생긴 조각은 새 획으로만 벨 수 있다
+        if (this.elapsed - n.born < 350) continue; // 생성 직후 잠깐은 보호
         if (segmentHitsCircle(ax, ay, bx, by, n.x, n.y, n.r)) {
           this.cut(n, ax, ay, bx, by);
         }
@@ -299,7 +302,7 @@
     }
 
     onCompositeCut(n, angle) {
-      const pair = M.randomPair(n.value);
+      const pair = M.balancedPair(n.value);
       const [a, b] = pair;
       this.streak += 1;
       this.multiplier = Math.min(5, 1 + Math.floor(this.streak / 4));
@@ -317,6 +320,7 @@
       // 화면 안으로 살짝 당기기
       const cx = this.W / 2;
       left.vx += (cx - left.x) * 0.2; right.vx += (cx - right.x) * 0.2;
+      left.bornStroke = this.strokeId; right.bornStroke = this.strokeId;
       this.numbers.push(left, right);
 
       this.spawnSparks(n.x, n.y, COLORS.good, 14);

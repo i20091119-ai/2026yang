@@ -183,7 +183,9 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 .rank-list li.mine { background: rgba(255, 209, 102, 0.22); color: var(--gold); outline: 1px solid var(--gold); }
 .rank-list.compact li { padding: 3px 10px; font-size: 16px; }
 .rank-no { color: #ffb997; }
-.rank-no::after { content: " …"; color: rgba(255,255,255,0.4); }
+.rank-list li:nth-child(1) .rank-no { color: #ffd166; }
+.rank-list li:nth-child(2) .rank-no { color: #e6e6e6; }
+.rank-list li:nth-child(3) .rank-no { color: #d9a066; }
 .rank-loading, .rank-empty { justify-content: center !important; font-size: 15px !important; color: #cfc2b4; font-family: var(--font-body) !important; }
 .rank-note { font-size: 13px; color: #cfc2b4; margin-bottom: 12px; }
 

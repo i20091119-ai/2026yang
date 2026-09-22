@@ -133,7 +133,7 @@
       const li = document.createElement("li");
       const isMine = !highlighted && highlightScore != null && row.score === highlightScore;
       if (isMine) { li.classList.add("mine"); highlighted = true; }
-      li.innerHTML = '<span class="rank-no">' + (i + 1) + '</span><span class="rank-score">' + row.score + "</span>";
+      li.innerHTML = '<span class="rank-no">' + (i + 1) + '등</span><span class="rank-score">' + row.score + "</span>";
       ol.appendChild(li);
     });
   }

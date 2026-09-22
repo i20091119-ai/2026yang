@@ -447,9 +447,9 @@
       // 조각 두 개: 살짝 좌우로 벌어지면서 위로 튀어 오른다 (한 조각이 조금 더 높이)
       const side = this.unit * 0.17;                      // 수평 분리 속도 (완만하게)
       const nx = -Math.sin(angle);
-      const baseUp = Math.min(n.vy, 0);
-      const left = this.makeNumber(a, n.x - 22, n.y - 8, -side + nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.95);
-      const right = this.makeNumber(b, n.x + 22, n.y - 8, side - nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.82);
+      const baseUp = Math.min(n.vy, 0) * 0.4;             // 아직 올라가던 중이면 그 속도는 일부만 남긴다
+      const left = this.makeNumber(a, n.x - 22, n.y - 8, -side + nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.72);
+      const right = this.makeNumber(b, n.x + 22, n.y - 8, side - nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.62);
       // 화면 밖으로 나가지 않게만 살짝 당기기
       const cx = this.W / 2;
       if (left.x < this.W * 0.25) left.vx += (cx - left.x) * 0.4;

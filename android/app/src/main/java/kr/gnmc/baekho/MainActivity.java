@@ -27,6 +27,8 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private boolean fellBack = false;
+    private long lastLiveLoad = 0;
+    private static final long RELOAD_AFTER_MS = 5 * 60 * 1000; // 5분 넘게 뒀다 돌아오면 새로 받는다
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,8 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setAllowFileAccess(true);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // 인터넷이 되면 항상 서버에서 새로 받는다 (푸시한 내용이 바로 반영되도록). 오프라인이면 내장 사본을 쓴다.
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
         web.setBackgroundColor(0xFF120E12);
 
         web.setWebChromeClient(new WebChromeClient());
@@ -70,10 +73,16 @@ public class MainActivity extends Activity {
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else if (isOnline()) {
-            web.loadUrl(LIVE_URL);
+            loadLive();
         } else {
             loadLocal();
         }
+    }
+
+    private void loadLive() {
+        fellBack = false;
+        lastLiveLoad = System.currentTimeMillis();
+        web.loadUrl(LIVE_URL);
     }
 
     private void loadLocal() {
@@ -110,7 +119,12 @@ public class MainActivity extends Activity {
     protected void onPause() { super.onPause(); web.onPause(); }
 
     @Override
-    protected void onResume() { super.onResume(); web.onResume(); }
+    protected void onResume() {
+        super.onResume();
+        web.onResume();
+        // 한참 뒤에 다시 열면 최신 버전으로 새로 받는다 (게임 도중에는 방해하지 않도록 5분 기준)
+        if (lastLiveLoad > 0 && System.currentTimeMillis() - lastLiveLoad > RELOAD_AFTER_MS && isOnline()) loadLive();
+    }
 
     @Override
     public void onBackPressed() {

@@ -42,10 +42,17 @@
   const callbacks = {
     onScore: (v) => { $("#hud-score").textContent = v; },
     onLives: (v) => setLives(v),
-    onCombo: (m) => {
+    onCombo: (c) => {
       const el = $("#hud-combo");
-      el.textContent = "x" + m;
-      el.classList.toggle("hot", m >= 2);
+      el.textContent = "x" + c.multiplier;
+      el.classList.toggle("hot", c.multiplier >= 2);
+      $("#hud-streak").textContent = c.streak >= 2 ? "연속 " + c.streak + "회" : "";
+    },
+    onProgress: (p) => {
+      const box = $("#hud-progress");
+      box.className = "hud-progress " + p.mode;
+      $("#hud-bar-fill").style.width = Math.round(Math.max(0, Math.min(1, p.ratio)) * 100) + "%";
+      $("#hud-progress-text").textContent = p.text;
     },
     onStage: (s) => { $("#hud-diff").textContent = DIFF_NAMES[currentDiff] + " · " + s.number + "진 " + s.name; },
     onGameOver: (stats) => onGameOver(stats),

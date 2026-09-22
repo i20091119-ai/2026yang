@@ -239,7 +239,8 @@
       this.running = true; this.paused = false; this.over = false;
       this.lastTs = performance.now();
       this.emit("score", this.score); this.emit("lives", this.lives);
-      this.emit("combo", this.multiplier); this.emit("stage", this.stageInfo());
+      this.emitCombo(); this.emit("stage", this.stageInfo());
+      this.lastProgress = ""; this.emitProgress();
       this.showBanner(0);
       requestAnimationFrame((ts) => this.loop(ts));
     }
@@ -249,6 +250,32 @@
       if (this.running && this.paused) { this.paused = false; this.lastTs = performance.now(); requestAnimationFrame((ts) => this.loop(ts)); }
     }
     stop() { this.running = false; this.paused = false; this.drawIdle(); }
+
+    emitCombo() { this.emit("combo", { multiplier: this.multiplier, streak: this.streak }); }
+
+    // 이번 진에서 해야 할 임무(나누기 횟수)와 진행, 마지막 진은 총공세 상태
+    progressInfo() {
+      const last = this.stageIndex === STAGES.length - 1;
+      if (!last) {
+        const total = this.diff.splitsPerStage;
+        const done = Math.min(total, this.splits - total * this.stageIndex);
+        return { text: "왜군 " + done + " / " + total, ratio: done / total, mode: "quest" };
+      }
+      const t = this.elapsed - this.stageStart;
+      if (t < SURGE_DELAY) {
+        const sec = Math.ceil((SURGE_DELAY - t) / 1000);
+        return { text: "총공세까지 " + sec + "초", ratio: t / SURGE_DELAY, mode: "countdown" };
+      }
+      const sg = this.surge();
+      const level = sg >= 1 ? "최대" : (Math.floor(sg * 3) + 1) + "단계";
+      return { text: "총공세 " + level, ratio: sg, mode: "surge" };
+    }
+
+    emitProgress() {
+      const p = this.progressInfo();
+      const key = p.text + "|" + p.ratio.toFixed(2);
+      if (key !== this.lastProgress) { this.lastProgress = key; this.emit("progress", p); }
+    }
 
     emit(name, payload) { const cb = this.callbacks["on" + name[0].toUpperCase() + name.slice(1)]; if (cb) cb(payload); }
 
@@ -410,7 +437,10 @@
       this.streak += 1;
       this.multiplier = Math.min(5, 1 + Math.floor(this.streak / 4));
       const bothPrime = M.isPrime(a) && M.isPrime(b);
-      const gained = 1 * this.multiplier + (bothPrime ? 1 : 0);
+      let gained = 1 * this.multiplier + (bothPrime ? 1 : 0);
+      let streakBonus = 0;
+      if (this.streak % 5 === 0) streakBonus = (this.streak / 5) * 2; // 5회 +2, 10회 +4, 15회 +6 …
+      gained += streakBonus;
       this.score += gained;
       this.splits += 1;
 
@@ -433,8 +463,10 @@
       if (window.Sound) Sound.play("slice");
       this.addFloater(n.x, n.y - n.r, a + " × " + b, COLORS.good, 1.0);
       this.addFloater(n.x, n.y - n.r - 30, "+" + gained + (bothPrime ? " 완전분해!" : ""), COLORS.text, 0.85);
+      if (streakBonus > 0) this.addFloater(n.x, n.y + n.r + 26, "연속 " + this.streak + "회! 보너스 +" + streakBonus, "#ffd166", 1.15);
+      else if (this.streak >= 2) this.addFloater(n.x, n.y + n.r + 26, "연속 " + this.streak + "회!", "#ffd166", 0.9);
 
-      this.emit("score", this.score); this.emit("combo", this.multiplier);
+      this.emit("score", this.score); this.emitCombo();
       this.checkStageAdvance();
     }
 
@@ -453,11 +485,11 @@
         this.streak = 0; this.multiplier = 1;
         this.score = Math.max(0, this.score - 1);
         this.addFloater(n.x, n.y - n.r, "소수! -1", COLORS.bad, 1.0);
-        this.emit("score", this.score); this.emit("combo", this.multiplier);
+        this.emit("score", this.score); this.emitCombo();
       } else {
         this.streak = 0; this.multiplier = 1;
         this.addFloater(n.x, n.y - n.r, "소수! 목숨 -1", COLORS.bad, 1.2);
-        this.emit("combo", this.multiplier);
+        this.emitCombo();
         this.loseLife();
       }
     }
@@ -468,7 +500,7 @@
       this.streak = 0; this.multiplier = 1;
       this.addFloater(clamp(n.x, 60, this.W - 60), this.H - 80, n.value + " 놓쳤다!", COLORS.bad, 1.2);
       this.flash = { color: "rgba(255, 60, 60, 0.35)", until: performance.now() + 250 };
-      this.emit("combo", this.multiplier);
+      this.emitCombo();
       this.loseLife();
     }
 
@@ -570,6 +602,7 @@
       }
 
       if (this.transition) this.updateTransition(dt);
+      this.emitProgress();
 
       // 생성 (전환 중에는 쉼)
       this.spawnTimer -= dt * 1000;

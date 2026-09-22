@@ -149,7 +149,14 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 }
 .hud-score { font-size: 46px; line-height: 1; color: #fff; }
 .hud-diff { font-size: 14px; color: var(--gold); margin-top: 4px; letter-spacing: 1px; }
+.hud-progress { margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #fff; }
+.hud-bar { width: 84px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.35); overflow: hidden; }
+.hud-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8fe36b, #ffd166); transition: width 0.25s ease; }
+.hud-progress.countdown .hud-bar i { background: linear-gradient(90deg, #ffd166, #ff8c42); }
+.hud-progress.surge .hud-bar i { background: linear-gradient(90deg, #ff8c42, #ff3b3b); }
+.hud-progress.surge span { color: #ff8c8c; }
 .hud-right { text-align: right; }
+.hud-streak { font-size: 13px; color: #ffd166; min-height: 15px; margin-top: 2px; }
 .hud-combo { font-size: 30px; line-height: 1; color: #fff; transition: transform 0.1s; }
 .hud-combo.hot { color: var(--gold); transform: scale(1.15); }
 .hud-lives { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }

@@ -6,7 +6,12 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
@@ -46,8 +51,7 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setAllowFileAccess(true);
-        // 인터넷이 되면 항상 서버에서 새로 받는다 (푸시한 내용이 바로 반영되도록). 오프라인이면 내장 사본을 쓴다.
-        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        s.setCacheMode(WebSettings.LOAD_DEFAULT); // 평소엔 캐시를 써서 가볍게
         web.setBackgroundColor(0xFF120E12);
 
         web.setWebChromeClient(new WebChromeClient());
@@ -79,10 +83,38 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * 가벼운 업데이트 확인: 서버에 HEAD 요청 하나만 보내 index.html 의 ETag 를 본다.
+     * 지난번과 다르면(=새로 푸시됨) 캐시를 비우고 받고, 같으면 캐시를 그대로 써서 빠르고 가볍게 연다.
+     */
     private void loadLive() {
         fellBack = false;
         lastLiveLoad = System.currentTimeMillis();
-        web.loadUrl(LIVE_URL);
+        final SharedPreferences prefs = getSharedPreferences("baekho", MODE_PRIVATE);
+        final Handler ui = new Handler(Looper.getMainLooper());
+        new Thread(() -> {
+            String tag = null;
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL(LIVE_URL).openConnection();
+                c.setRequestMethod("HEAD");
+                c.setRequestProperty("Cache-Control", "no-cache");
+                c.setConnectTimeout(3000);
+                c.setReadTimeout(3000);
+                if (c.getResponseCode() == 200) {
+                    tag = c.getHeaderField("ETag");
+                    if (tag == null) tag = c.getHeaderField("Last-Modified");
+                }
+                c.disconnect();
+            } catch (Exception ignored) { }
+            final String newTag = tag;
+            ui.post(() -> {
+                if (newTag != null && !newTag.equals(prefs.getString("etag", ""))) {
+                    web.clearCache(true);
+                    prefs.edit().putString("etag", newTag).apply();
+                }
+                web.loadUrl(LIVE_URL);
+            });
+        }).start();
     }
 
     private void loadLocal() {

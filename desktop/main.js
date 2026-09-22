@@ -1,7 +1,8 @@
 // 백호장군 안이명: 윈도우용 껍데기 앱
 // 인터넷이 되면 GitHub Pages 의 최신 버전을 띄우고(자동 업데이트), 안 되면 앱에 담긴 사본을 띄운다.
-const { app, BrowserWindow, shell, globalShortcut, session } = require("electron");
+const { app, BrowserWindow, shell, globalShortcut, session, net } = require("electron");
 const path = require("path");
+const fs = require("fs");
 
 const LIVE_URL = "https://i20091119-ai.github.io/2026yang/";
 const LOCAL_INDEX = path.join(__dirname, "www", "index.html");
@@ -22,8 +23,23 @@ function createWindow() {
   let fellBack = false;
   const fallback = () => { if (!fellBack) { fellBack = true; win.loadFile(LOCAL_INDEX); } };
   win.webContents.on("did-fail-load", (_e, _code, _desc, _url, isMainFrame) => { if (isMainFrame) fallback(); });
-  // 캐시를 비우고 서버에서 새로 받는다 (푸시한 내용이 바로 반영되도록)
-  session.defaultSession.clearCache().finally(() => win.loadURL(LIVE_URL).catch(fallback));
+  // 가벼운 업데이트 확인: HEAD 요청 하나로 index.html 의 ETag 를 보고, 바뀌었을 때만 캐시를 비운다.
+  checkForUpdate().then((changed) => changed ? session.defaultSession.clearCache() : null)
+    .finally(() => win.loadURL(LIVE_URL).catch(fallback));
+}
+
+async function checkForUpdate() {
+  const tagFile = path.join(app.getPath("userData"), "etag.txt");
+  try {
+    const res = await net.fetch(LIVE_URL, { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return false;
+    const tag = res.headers.get("etag") || res.headers.get("last-modified") || "";
+    if (!tag) return false;
+    let old = "";
+    try { old = fs.readFileSync(tagFile, "utf8"); } catch (e) { /* 첫 실행 */ }
+    if (tag !== old) { fs.writeFileSync(tagFile, tag); return old !== ""; }
+  } catch (e) { /* 오프라인 등 */ }
+  return false;
 }
 
 app.whenReady().then(() => {

@@ -79,14 +79,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -R out
+          cat > notes.md <<'NOTES'
+          커밋 ${{ github.sha }} 기준 자동 빌드입니다.
+
+          - **BaekhoGeneral-Setup-*.exe**: 윈도우 설치판 (바탕화면 바로가기 생성)
+          - **BaekhoGeneral-Portable-*.exe**: 윈도우 무설치판 (그냥 실행)
+          - **BaekhoGeneral-*.apk**: 안드로이드 태블릿/폰용
+
+          앱은 인터넷이 되면 항상 웹의 최신 버전을 불러오므로, 게임 내용이 바뀌어도 다시 설치할 필요가 없습니다.
+          NOTES
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest \
-            --title "최신 빌드 #${{ github.run_number }}" \
-            --notes "커밋 ${{ github.sha }} 기준 자동 빌드입니다.
-
-- **BaekhoGeneral-Setup-*.exe**: 윈도우 설치판 (바탕화면 바로가기 생성)
-- **BaekhoGeneral-Portable-*.exe**: 윈도우 무설치판 (그냥 실행)
-- **BaekhoGeneral-*.apk**: 안드로이드 태블릿/폰용
-
-앱은 인터넷이 되면 항상 웹의 최신 버전을 불러오므로, 게임 내용이 바뀌어도 다시 설치할 필요가 없습니다." \
-            out/windows/*.exe out/android/*.apk
+          gh release create latest --title "최신 빌드 #${{ github.run_number }}" --notes-file notes.md out/windows/*.exe out/android/*.apk

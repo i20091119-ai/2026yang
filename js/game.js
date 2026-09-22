@@ -391,7 +391,7 @@
 
     fontSize(value) {
       const base = this.unit * 0.12 * this.diff.fontScale;
-      return clamp(base, 30, 76);
+      return clamp(base, 30, 112); // 태블릿에서는 더 크게
     }
 
     gravity() { return this.H * 0.7 * (1 + 0.7 * this.surge()); } // 총공세 때 최대 1.7배 빨리 떨어진다
@@ -687,7 +687,7 @@
         const k = 1 - f.age / f.life;
         ctx.save();
         ctx.globalAlpha = Math.min(1, k * 1.6);
-        ctx.font = "bold " + Math.round(22 * f.scale) + "px 'Jua', sans-serif";
+        ctx.font = "bold " + Math.round(Math.max(22, this.unit * 0.056) * f.scale) + "px 'Jua', sans-serif";
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.lineWidth = 5; ctx.strokeStyle = COLORS.stroke; ctx.lineJoin = "round";
         ctx.strokeText(f.text, f.x, f.y);
@@ -749,14 +749,17 @@
       // 현재 칼 표시 (오른쪽 위, 배수·목숨 표시 바로 왼쪽)
       {
         const tier = this.swordTier();
-        const L = Math.min(88, this.unit * 0.24);
-        const cx = W - 118 - L * 0.5;
-        this.drawSword(ctx, cx - L * 0.12, 40, -0.5, tier, L, 0.95);
+        const L = clamp(this.unit * 0.24, 70, 150);
+        const hudRight = document.getElementById("hud-right");
+        const rightW = hudRight ? hudRight.getBoundingClientRect().width + 26 : 118;
+        const cx = W - rightW - L * 0.5;
+        const nameSize = Math.round(clamp(this.unit * 0.036, 13, 22));
+        this.drawSword(ctx, cx - L * 0.12, L * 0.46, -0.5, tier, L, 0.95);
         ctx.save();
-        ctx.font = "bold 13px 'Jua', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.font = "bold " + nameSize + "px 'Jua', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
         ctx.lineWidth = 3; ctx.strokeStyle = COLORS.stroke; ctx.lineJoin = "round";
-        ctx.strokeText(SWORDS[tier].name, cx, 60);
-        ctx.fillStyle = "#ffd166"; ctx.fillText(SWORDS[tier].name, cx, 60);
+        ctx.strokeText(SWORDS[tier].name, cx, L * 0.68);
+        ctx.fillStyle = "#ffd166"; ctx.fillText(SWORDS[tier].name, cx, L * 0.68);
         ctx.restore();
       }
 

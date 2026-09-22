@@ -35,6 +35,8 @@
   // 진 전환 연출(ms): 완료 메시지 → 어두워짐 → 새 배경 밝아짐(배너와 함께)
   const TRANS_HOLD = 1700, TRANS_OUT = 600, TRANS_IN = 700;
   const SURGE_RAMP = 45000;
+  const SURGE_HOLD = 30000;          // 총공세 최대 단계를 이만큼 버티면 승리
+  const VICTORY_LIFE_BONUS = 10;     // 승리 시 남은 목숨 하나당 보너스
   const COLORS = {
     blade: "#ffffff",
     bladeGlow: "rgba(170, 220, 255, 0.9)",
@@ -183,10 +185,10 @@
       }
     }
 
-    drawIdle() {
+    drawIdle(stageIndex) {
       const ctx = this.ctx;
       ctx.clearRect(0, 0, this.W, this.H);
-      this.drawBackground(ctx, 0);
+      this.drawBackground(ctx, stageIndex || 0);
     }
 
     // ----- 입력 -----
@@ -238,7 +240,7 @@
       this.numbers = []; this.particles = []; this.floaters = []; this.trail = [];
       this.score = 0; this.lives = MAX_LIVES; this.streak = 0; this.multiplier = 1;
       this.stageIndex = 0; this.splits = 0; this.primeCuts = 0; this.misses = 0;
-      this.stageStart = 0; this.surgeShown = false; this.transition = null;
+      this.stageStart = 0; this.surgeShown = false; this.transition = null; this.victoryWon = false;
       this.elapsed = 0; this.spawnTimer = 600; this.stageBanner = { text: "", sub: "", until: 0 };
       this.running = true; this.paused = false; this.over = false;
       this.lastTs = performance.now();
@@ -271,8 +273,11 @@
         return { text: "총공세까지 " + sec + "초", ratio: t / SURGE_DELAY, mode: "countdown" };
       }
       const sg = this.surge();
-      const level = sg >= 1 ? "최대" : (Math.floor(sg * 3) + 1) + "단계";
-      return { text: "총공세 " + level, ratio: sg, mode: "surge" };
+      if (sg >= 1) {
+        const left = Math.max(0, Math.ceil((SURGE_DELAY + SURGE_RAMP + SURGE_HOLD - t) / 1000));
+        return { text: "총공세 최대 · " + left + "초만 버티면 승리!", ratio: left / (SURGE_HOLD / 1000), mode: "surge" };
+      }
+      return { text: "총공세 " + (Math.floor(sg * 3) + 1) + "단계", ratio: sg, mode: "surge" };
     }
 
     emitProgress() {
@@ -558,15 +563,35 @@
       return 1 - (tr.t - TRANS_HOLD - TRANS_OUT) / TRANS_IN;
     }
 
+    // 대구 총공세를 끝까지 버텨 냈다: 남은 숫자는 흩어지고, 목숨 보너스를 더한 뒤 승리 화면으로
+    victory() {
+      if (this.over) return;
+      this.over = true; this.victoryWon = true;
+      for (const n of this.numbers) { if (!n.dead) { n.dead = true; this.spawnSparks(n.x, n.y, "#ffd166", 12); } }
+      this.numbers = [];
+      const bonus = this.lives * VICTORY_LIFE_BONUS;
+      this.score += bonus;
+      this.emit("score", this.score);
+      this.showText("승리! 왜군을 모두 물리쳤다!", "남은 목숨 " + this.lives + "개 · 보너스 +" + bonus);
+      this.stageBanner.until = performance.now() + 3200; this.stageBanner.dur = 3200;
+      if (window.Sound) { Sound.stopBgm(); Sound.play("stage"); }
+      const stats = this.stats(); stats.victory = true; stats.lifeBonus = bonus;
+      setTimeout(() => { this.running = false; this.drawIdle(this.stageIndex); this.emit("gameOver", stats); }, 3000);
+    }
+
+    stats() {
+      return {
+        difficulty: this.diffKey, difficultyName: this.diff.name,
+        score: this.score, splits: this.splits, primeCuts: this.primeCuts, misses: this.misses,
+        stage: this.stageInfo(), elapsedMs: this.elapsed, victory: false, lifeBonus: 0,
+      };
+    }
+
     endGame() {
       this.over = true;
       if (window.Sound) { Sound.stopBgm(); Sound.play("over"); }
-      const stats = {
-        difficulty: this.diffKey, difficultyName: this.diff.name,
-        score: this.score, splits: this.splits, primeCuts: this.primeCuts, misses: this.misses,
-        stage: this.stageInfo(), elapsedMs: this.elapsed,
-      };
-      setTimeout(() => { this.running = false; this.emit("gameOver", stats); }, 900);
+      const stats = this.stats();
+      setTimeout(() => { this.running = false; this.drawIdle(this.stageIndex); this.emit("gameOver", stats); }, 900);
     }
 
     // ----- 효과 -----
@@ -607,6 +632,11 @@
 
       if (this.transition) this.updateTransition(dt);
       this.emitProgress();
+
+      if (this.stageIndex === STAGES.length - 1 && this.elapsed - this.stageStart >= SURGE_DELAY + SURGE_RAMP + SURGE_HOLD) {
+        this.victory();
+        return;
+      }
 
       // 생성 (전환 중에는 쉼)
       this.spawnTimer -= dt * 1000;
@@ -819,7 +849,7 @@
       }
 
       if (this.over) {
-        ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = this.victoryWon ? "rgba(255, 209, 102, 0.12)" : "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, W, H);
       }
     }
   }

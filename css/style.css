@@ -192,6 +192,8 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 /* ---------- 게임 오버 ---------- */
 .gameover-panel { max-width: 560px; }
 .gameover-title { font-size: 40px; color: #fff; margin-bottom: 2px; }
+.panel.victory { border-color: rgba(255, 209, 102, 0.7); box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.25), 0 20px 50px rgba(0,0,0,0.5); }
+.panel.victory .gameover-title { color: var(--gold); text-shadow: 0 4px 0 #6b2a1f, 0 0 24px rgba(255, 209, 102, 0.6); }
 .gameover-diff { font-family: var(--font-title); font-size: 20px; color: var(--gold); letter-spacing: 2px; margin-bottom: 14px; }
 .gameover-body { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
 .gameover-body .rank-list { flex: 1 1 45%; margin: 0; }

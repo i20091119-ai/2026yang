@@ -102,10 +102,16 @@
   // ----- 게임 오버 -----
   async function onGameOver(stats) {
     lastStats = stats;
-    $("#gameover-diff").textContent = stats.difficultyName + " · " + stats.stage.number + "진 " + stats.stage.name + "까지";
+    const panel = $("#screen-gameover .panel");
+    panel.classList.toggle("victory", !!stats.victory);
+    $(".gameover-title").textContent = stats.victory ? "승리!" : "전투 종료";
+    $("#gameover-diff").textContent = stats.victory
+      ? stats.difficultyName + " · 다섯 전장을 모두 지켜냈다!"
+      : stats.difficultyName + " · " + stats.stage.number + "진 " + stats.stage.name + "까지";
     $("#final-score").textContent = stats.score;
     $("#final-stats").innerHTML =
-      "나눈 횟수 <b>" + stats.splits + "</b> · 놓친 합성수 <b>" + stats.misses + "</b> · 소수 베기 <b>" + stats.primeCuts + "</b>";
+      "나눈 횟수 <b>" + stats.splits + "</b> · 놓친 합성수 <b>" + stats.misses + "</b> · 소수 베기 <b>" + stats.primeCuts + "</b>" +
+      (stats.victory ? "<br>남은 목숨 보너스 <b>+" + stats.lifeBonus + "</b>" : "");
     $("#gameover-list").innerHTML = '<li class="rank-loading">기록 중…</li>';
     $("#gameover-note").textContent = "";
     show("screen-gameover");

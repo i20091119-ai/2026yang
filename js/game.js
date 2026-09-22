@@ -19,6 +19,15 @@
     { name: "대구", primePenalty: "life",  hint: "소수를 베면 목숨을 잃습니다!",   bg: "assets/bg/stage-5-daegu.jpg" },
   ];
 
+  // 칼 등급: 진(스테이지)이 오를 때마다 한 단계씩. assets/ui/sword-N.png 가 있으면 그 그림을 쓴다.
+  const SWORDS = [
+    { name: "목검",     blade: "#c9a46b", edge: "#eedbb4", guard: "#6b4a2a", grip: "#4a3320", pommel: "#6b4a2a" },
+    { name: "철검",     blade: "#b9c0c8", edge: "#ffffff", guard: "#4b515a", grip: "#2b2b2b", pommel: "#4b515a" },
+    { name: "환도",     blade: "#d3d9e0", edge: "#ffffff", guard: "#c9a227", grip: "#7a1f1f", pommel: "#c9a227", tassel: "#d7263d" },
+    { name: "백호검",   blade: "#eef2f6", edge: "#ffffff", guard: "#c9a227", grip: "#1a1a1a", pommel: "#c9a227", stripes: "#2b2b2b", glow: "rgba(170, 220, 255, 0.75)" },
+    { name: "백호장군검", blade: "#fff6d8", edge: "#ffffff", guard: "#ffd166", grip: "#7a1f1f", pommel: "#ffd166", stripes: "#3a2a10", tassel: "#ffd166", glow: "rgba(255, 209, 102, 0.9)" },
+  ];
+
   const MAX_LIVES = 3;
   // 마지막 진(대구) 총공세: 도착 후 SURGE_DELAY 가 지나면 SURGE_RAMP 동안 점점 빨라진다
   const SURGE_DELAY = 30000;
@@ -66,6 +75,8 @@
       this.trail = [];
       this.pointerDown = false;
       this.lastPointer = null;
+      this.swordImages = SWORDS.map((_, i) => { const img = new Image(); img.src = "assets/ui/sword-" + (i + 1) + ".png"; return img; });
+      this.sword = { x: 0, y: 0, angle: -0.6, lastMove: 0 };
       this.stageImages = STAGES.map((st) => {
         const img = new Image();
         img.onload = () => { if (this.running) this.render(performance.now()); };
@@ -183,6 +194,7 @@
         const p = getPos(e);
         this.lastPointer = p;
         this.trail.push({ x: p.x, y: p.y, t: performance.now() });
+        this.sword.x = p.x; this.sword.y = p.y; this.sword.lastMove = performance.now();
         this.slice(p.x, p.y, p.x, p.y);
       });
       cv.addEventListener("pointermove", (e) => {
@@ -190,6 +202,9 @@
         const p = getPos(e);
         const q = this.lastPointer || p;
         this.trail.push({ x: p.x, y: p.y, t: performance.now() });
+        const dx = p.x - q.x, dy = p.y - q.y;
+        if (dx * dx + dy * dy > 4) this.sword.angle = Math.atan2(dy, dx);
+        this.sword.x = p.x; this.sword.y = p.y; this.sword.lastMove = performance.now();
         this.slice(q.x, q.y, p.x, p.y);
         this.lastPointer = p;
       });
@@ -233,7 +248,65 @@
 
     showBanner(index) {
       const s = STAGES[index];
-      this.stageBanner = { text: "제" + (index + 1) + "진 · " + s.name, sub: s.hint, until: performance.now() + 2200 };
+      const sub = index > 0 ? s.hint + " · 새 칼: " + SWORDS[this.swordTier()].name : s.hint;
+      this.stageBanner = { text: "제" + (index + 1) + "진 · " + s.name, sub, until: performance.now() + 2600 };
+    }
+
+    swordTier() { return Math.min(this.stageIndex, SWORDS.length - 1); }
+
+    // 칼 그리기: (x, y) 는 칼자루 끝쪽 기준점, angle 방향으로 칼끝이 향한다
+    drawSword(ctx, x, y, angle, tier, L, alpha) {
+      const img = this.swordImages[tier];
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = alpha;
+      if (img && img.complete && img.naturalWidth > 0) {
+        // 그림 파일: 가로로 눕힌 칼, 칼끝이 오른쪽을 향한 그림을 기대
+        const h = L * img.naturalHeight / img.naturalWidth;
+        ctx.drawImage(img, -L * 0.35, -h / 2, L, h);
+        ctx.restore(); return;
+      }
+      const S = SWORDS[tier];
+      const w = L * 0.075;
+      ctx.lineJoin = "round"; ctx.lineCap = "round";
+      if (S.glow) { ctx.shadowColor = S.glow; ctx.shadowBlur = L * 0.18; }
+      // 칼날 (환도처럼 살짝 휜 외날)
+      ctx.beginPath();
+      ctx.moveTo(-0.12 * L, -w * 0.45);
+      ctx.quadraticCurveTo(0.3 * L, -w * 1.0, 0.64 * L, -w * 0.1);
+      ctx.quadraticCurveTo(0.3 * L, w * 0.6, -0.12 * L, w * 0.45);
+      ctx.closePath();
+      ctx.fillStyle = S.blade; ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(20, 15, 20, 0.7)"; ctx.lineWidth = Math.max(1, L * 0.012); ctx.stroke();
+      // 날 선 부분 하이라이트
+      ctx.beginPath(); ctx.moveTo(-0.08 * L, w * 0.15); ctx.quadraticCurveTo(0.3 * L, w * 0.35, 0.6 * L, -w * 0.05);
+      ctx.strokeStyle = S.edge; ctx.lineWidth = Math.max(1, L * 0.014); ctx.stroke();
+      // 호랑이 줄무늬
+      if (S.stripes) {
+        ctx.strokeStyle = S.stripes; ctx.lineWidth = Math.max(1.5, L * 0.02);
+        for (let i = 0; i < 4; i++) {
+          const bx = 0.02 * L + i * 0.13 * L;
+          ctx.beginPath(); ctx.moveTo(bx, -w * 0.7); ctx.quadraticCurveTo(bx + w * 0.4, 0, bx - w * 0.1, w * 0.45); ctx.stroke();
+        }
+      }
+      // 코등이(가드)
+      ctx.beginPath(); ctx.ellipse(-0.13 * L, 0, w * 0.55, w * 1.25, 0, 0, Math.PI * 2);
+      ctx.fillStyle = S.guard; ctx.fill(); ctx.strokeStyle = "rgba(20,15,20,0.7)"; ctx.lineWidth = Math.max(1, L * 0.012); ctx.stroke();
+      // 손잡이
+      ctx.fillStyle = S.grip;
+      ctx.beginPath(); ctx.roundRect(-0.35 * L, -w * 0.42, 0.22 * L, w * 0.84, w * 0.2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.18)"; ctx.lineWidth = Math.max(1, L * 0.01);
+      for (let i = 1; i < 5; i++) { const gx = -0.35 * L + i * 0.044 * L; ctx.beginPath(); ctx.moveTo(gx, -w * 0.42); ctx.lineTo(gx - w * 0.3, w * 0.42); ctx.stroke(); }
+      // 칼자루 끝
+      ctx.beginPath(); ctx.arc(-0.36 * L, 0, w * 0.5, 0, Math.PI * 2); ctx.fillStyle = S.pommel; ctx.fill();
+      ctx.strokeStyle = "rgba(20,15,20,0.7)"; ctx.lineWidth = Math.max(1, L * 0.012); ctx.stroke();
+      // 술
+      if (S.tassel) {
+        ctx.strokeStyle = S.tassel; ctx.lineWidth = Math.max(1.5, L * 0.02);
+        ctx.beginPath(); ctx.moveTo(-0.38 * L, 0); ctx.quadraticCurveTo(-0.44 * L, w * 0.6, -0.42 * L, w * 1.6); ctx.stroke();
+        for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(-0.42 * L, w * 1.6); ctx.lineTo(-0.42 * L + i * w * 0.35, w * 2.4); ctx.stroke(); }
+      }
+      ctx.restore();
     }
 
     showText(text, sub) {
@@ -556,6 +629,28 @@
         ctx.restore();
       }
 
+      // 손끝을 따라가는 칼 (긋는 동안, 손을 뗀 뒤 0.35초까지 서서히 사라짐)
+      {
+        const age = now - this.sword.lastMove;
+        if (this.pointerDown || age < 350) {
+          const alpha = this.pointerDown ? 1 : 1 - age / 350;
+          this.drawSword(ctx, this.sword.x, this.sword.y, this.sword.angle, this.swordTier(), this.unit * 0.34, alpha);
+        }
+      }
+
+      // 현재 칼 표시 (상단 중앙)
+      {
+        const tier = this.swordTier();
+        const L = Math.min(96, this.unit * 0.26);
+        this.drawSword(ctx, W / 2 - L * 0.12, 42, -0.5, tier, L, 0.95);
+        ctx.save();
+        ctx.font = "bold 13px 'Jua', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.lineWidth = 3; ctx.strokeStyle = COLORS.stroke; ctx.lineJoin = "round";
+        ctx.strokeText(SWORDS[tier].name, W / 2, 62);
+        ctx.fillStyle = "#ffd166"; ctx.fillText(SWORDS[tier].name, W / 2, 62);
+        ctx.restore();
+      }
+
       // 화면 번쩍임 (실수)
       if (this.flash && now < this.flash.until) {
         ctx.fillStyle = this.flash.color; ctx.fillRect(0, 0, W, H);
@@ -589,4 +684,5 @@
   window.Game = Game;
   window.GAME_DIFFICULTIES = DIFFICULTIES;
   window.GAME_STAGES = STAGES;
+  window.GAME_SWORDS = SWORDS;
 })();

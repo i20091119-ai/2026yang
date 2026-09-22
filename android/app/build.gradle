@@ -1,0 +1,38 @@
+plugins { id 'com.android.application' }
+
+def buildNumber = (System.getenv("BUILD_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace 'kr.gnmc.baekho'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'kr.gnmc.baekho'
+        minSdk 24
+        targetSdk 34
+        versionCode buildNumber
+        versionName "1.0.${buildNumber}"
+    }
+
+    // 설치 연속성을 위한 전용 서명 키 (스토어 배포용 아님)
+    signingConfigs {
+        release {
+            storeFile file("../keystore/baekho.jks")
+            storePassword "baekho-2026"
+            keyAlias "baekho"
+            keyPassword "baekho-2026"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

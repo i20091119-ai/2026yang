@@ -1,0 +1,92 @@
+# 푸시할 때마다 윈도우 실행파일과 안드로이드 APK 를 만들어 GitHub Releases 의 "latest" 에 올린다.
+# 앱은 인터넷이 되면 GitHub Pages 의 최신 버전을 띄우므로, 게임 내용은 앱을 다시 설치하지 않아도 갱신된다.
+name: Build apps
+
+on:
+  push:
+    branches: [claude/brave-hypatia-90oo0t, main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apps
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Set version
+        working-directory: desktop
+        shell: bash
+        run: npm version "1.0.${{ github.run_number }}" --no-git-tag-version
+      - name: Build
+        working-directory: desktop
+        run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            desktop/dist/*.exe
+          if-no-files-found: error
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Copy site into app assets (offline fallback)
+        run: |
+          mkdir -p android/app/src/main/assets/www
+          cp -r index.html css js assets android/app/src/main/assets/www/
+      - name: Build APK
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: gradle -p android assembleRelease --no-daemon
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk BaekhoGeneral-${{ github.run_number }}.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: BaekhoGeneral-*.apk
+          if-no-files-found: error
+
+  release:
+    needs: [windows, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+      - name: Publish to Releases (latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -R out
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest \
+            --title "최신 빌드 #${{ github.run_number }}" \
+            --notes "커밋 ${{ github.sha }} 기준 자동 빌드입니다.
+
+- **BaekhoGeneral-Setup-*.exe**: 윈도우 설치판 (바탕화면 바로가기 생성)
+- **BaekhoGeneral-Portable-*.exe**: 윈도우 무설치판 (그냥 실행)
+- **BaekhoGeneral-*.apk**: 안드로이드 태블릿/폰용
+
+앱은 인터넷이 되면 항상 웹의 최신 버전을 불러오므로, 게임 내용이 바뀌어도 다시 설치할 필요가 없습니다." \
+            out/windows/*.exe out/android/*.apk

@@ -1,0 +1,34 @@
+{
+  "name": "baekho-general",
+  "productName": "BaekhoGeneral",
+  "version": "1.0.0",
+  "description": "백호장군 안이명: 숫자 베기 (경남수학문화관 양산수학체험센터)",
+  "author": "GNMC Yangsan",
+  "license": "MIT",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "copy-site": "node copy-site.js",
+    "start": "node copy-site.js && electron .",
+    "dist": "node copy-site.js && electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "kr.gnmc.baekho",
+    "productName": "BaekhoGeneral",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "www/**/*", "icon.ico", "icon.png"],
+    "win": { "target": ["portable", "nsis"], "icon": "icon.ico" },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "백호장군 안이명",
+      "artifactName": "BaekhoGeneral-Setup-${version}.${ext}"
+    },
+    "portable": { "artifactName": "BaekhoGeneral-Portable-${version}.${ext}" }
+  }
+}

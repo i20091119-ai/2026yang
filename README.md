@@ -47,6 +47,30 @@ python3 -m http.server 8080
 (`.nojekyll` 파일은 GitHub 이 Jekyll 빌드를 건너뛰고 파일을 그대로 올리게 합니다.
 `.github/workflows/pages.yml` 은 나중에 `main` 브랜치 + GitHub Actions 방식으로 바꿀 때를 위한 것이라 지금은 동작하지 않습니다.)
 
+## 앱으로 쓰기 (윈도우 exe, 안드로이드 apk)
+
+저장소 **Releases** 페이지의 `latest` 에서 받습니다: <https://github.com/i20091119-ai/2026yang/releases/tag/latest>
+
+| 파일 | 용도 |
+| --- | --- |
+| `BaekhoGeneral-Setup-*.exe` | 윈도우 설치판. 실행하면 설치되고 바탕화면에 "백호장군 안이명" 바로가기가 생깁니다. |
+| `BaekhoGeneral-Portable-*.exe` | 윈도우 무설치판. USB 등에 넣고 그냥 실행하면 됩니다. |
+| `BaekhoGeneral-*.apk` | 안드로이드 태블릿·폰. 파일을 열어 설치합니다("출처를 알 수 없는 앱" 허용 필요). |
+
+윈도우에서 F11 을 누르면 전체 화면이 됩니다. 스마트스크린 경고가 뜨면 "추가 정보 → 실행"을 누르면 됩니다(코드 서명 인증서가 없어서 뜨는 경고입니다).
+
+### 업데이트 방식
+
+앱은 얇은 껍데기입니다. 인터넷이 되면 항상 GitHub Pages 의 최신 게임을 불러오고, 인터넷이 안 될 때만 앱 안에 담긴 사본을 씁니다.
+그래서 **이 저장소에 푸시하면 설치된 앱에서도 다음에 실행할 때 바로 반영**됩니다. 다시 설치할 필요가 없습니다.
+
+푸시할 때마다 GitHub Actions(`.github/workflows/apps.yml`)가 exe 와 apk 를 새로 만들어 Releases 의 `latest` 에 덮어씁니다.
+오프라인 사본까지 최신으로 맞추고 싶을 때만 새 파일을 받아 다시 설치하면 됩니다.
+
+- 윈도우 앱: `desktop/` (Electron). 로컬에서 만들려면 `cd desktop && npm install && npm run dist`.
+- 안드로이드 앱: `android/` (WebView). 로컬에서 만들려면 Android SDK 를 설치한 뒤 `gradle -p android assembleRelease`.
+- `android/keystore/baekho.jks` 는 APK 서명용 키입니다. 스토어 배포용이 아니라 같은 키로 서명해야 덮어쓰기 설치가 되기 때문에 저장소에 함께 둡니다.
+
 ## 공용 점수판 설정 (Supabase 무료 티어)
 
 1. <https://supabase.com> 에서 새 프로젝트를 만듭니다.

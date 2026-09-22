@@ -722,7 +722,7 @@
           const k = age / SWING_MS, ease = 1 - Math.pow(1 - k, 3);
           const a0 = -1.9, a1 = 0.55;                    // 오른쪽 위에서 왼쪽 아래로 내려베기
           const ang = a0 + (a1 - a0) * ease;
-          const L = this.unit * 0.34;
+          const L = this.unit * 0.2;   // 휘두르는 칼 크기 (기존의 60%)
           // 베기 궤적 호
           ctx.save();
           ctx.globalAlpha = 1 - k;
@@ -742,7 +742,7 @@
         const age = now - this.sword.lastMove;
         if (this.pointerDown || age < 350) {
           const alpha = this.pointerDown ? 1 : 1 - age / 350;
-          this.drawSword(ctx, this.sword.x, this.sword.y, this.sword.angle, this.swordTier(), this.unit * 0.34, alpha);
+          this.drawSword(ctx, this.sword.x, this.sword.y, this.sword.angle, this.swordTier(), this.unit * 0.2, alpha); // 따라오는 칼도 같은 크기
         }
       }
 

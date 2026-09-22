@@ -12,11 +12,11 @@
   // 스테이지: 안이명 장군의 전투 경로. 소수를 베었을 때의 벌칙이 점점 강해진다.
   // bg: assets/bg/ 에 해당 파일이 있으면 그 그림을 배경으로 쓰고, 없으면 코드로 그린 배경을 쓴다.
   const STAGES = [
-    { name: "양산", primePenalty: "none",  hint: "소수는 그냥 보내세요",           bg: "assets/bg/stage-1-yangsan.jpg" },
-    { name: "밀양", primePenalty: "none",  hint: "소수를 잘 구분해 보세요",        bg: "assets/bg/stage-2-miryang.jpg" },
-    { name: "청도", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-3-cheongdo.jpg" },
-    { name: "울산", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-4-ulsan.jpg" },
-    { name: "대구", primePenalty: "life",  hint: "소수를 베면 목숨을 잃습니다!",   bg: "assets/bg/stage-5-daegu.jpg" },
+    { name: "양산", primePenalty: "none",  hint: "소수는 그냥 보내세요",           bg: "assets/bg/stage-1-yangsan.jpg",  done: "양산성을 지켜냈다!" },
+    { name: "밀양", primePenalty: "none",  hint: "소수를 잘 구분해 보세요",        bg: "assets/bg/stage-2-miryang.jpg",  done: "밀양의 왜군을 물리쳤다!" },
+    { name: "청도", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-3-cheongdo.jpg", done: "청도 골짜기를 돌파했다!" },
+    { name: "울산", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-4-ulsan.jpg",    done: "울산 왜성을 무찔렀다!" },
+    { name: "대구", primePenalty: "life",  hint: "소수를 베면 목숨을 잃습니다!",   bg: "assets/bg/stage-5-daegu.jpg",    done: "대구 들판을 지켜냈다!" },
   ];
 
   // 칼 등급: 진(스테이지)이 오를 때마다 한 단계씩. assets/ui/sword-N.png 가 있으면 그 그림을 쓴다.
@@ -31,6 +31,8 @@
   const MAX_LIVES = 3;
   // 마지막 진(대구) 총공세: 도착 후 SURGE_DELAY 가 지나면 SURGE_RAMP 동안 점점 빨라진다
   const SURGE_DELAY = 30000;
+  // 진 전환 연출(ms): 완료 메시지 → 어두워짐 → 새 배경 밝아짐(배너와 함께)
+  const TRANS_HOLD = 1700, TRANS_OUT = 600, TRANS_IN = 700;
   const SURGE_RAMP = 45000;
   const COLORS = {
     blade: "#ffffff",
@@ -223,7 +225,7 @@
       this.numbers = []; this.particles = []; this.floaters = []; this.trail = [];
       this.score = 0; this.lives = MAX_LIVES; this.streak = 0; this.multiplier = 1;
       this.stageIndex = 0; this.splits = 0; this.primeCuts = 0; this.misses = 0;
-      this.stageStart = 0; this.surgeShown = false;
+      this.stageStart = 0; this.surgeShown = false; this.transition = null;
       this.elapsed = 0; this.spawnTimer = 600; this.stageBanner = { text: "", sub: "", until: 0 };
       this.running = true; this.paused = false; this.over = false;
       this.lastTs = performance.now();
@@ -249,7 +251,7 @@
     showBanner(index) {
       const s = STAGES[index];
       const sub = index > 0 ? s.hint + " · 새 칼: " + SWORDS[this.swordTier()].name : s.hint;
-      this.stageBanner = { text: "제" + (index + 1) + "진 · " + s.name, sub, until: performance.now() + 2600 };
+      this.stageBanner = { text: "제" + (index + 1) + "진 · " + s.name, sub, until: performance.now() + 2600, dur: 2600 };
     }
 
     swordTier() { return Math.min(this.stageIndex, SWORDS.length - 1); }
@@ -310,7 +312,7 @@
     }
 
     showText(text, sub) {
-      this.stageBanner = { text, sub, until: performance.now() + 2200 };
+      this.stageBanner = { text, sub, until: performance.now() + 2200, dur: 2200 };
     }
 
     // 0(평소) ~ 1(최대 총공세). 마지막 진에서만 커진다.
@@ -372,6 +374,7 @@
 
     // ----- 베기 판정 -----
     slice(ax, ay, bx, by) {
+      if (this.transition) return;
       for (const n of this.numbers) {
         if (n.dead || n.bounced) continue; // 이미 튕겨낸 소수는 다시 베이지 않는다
         if (n.bornStroke === this.strokeId) continue; // 같은 획으로 생긴 조각은 새 획으로만 벨 수 있다
@@ -467,13 +470,46 @@
 
     checkStageAdvance() {
       const next = this.stageIndex + 1;
-      if (next < STAGES.length && this.splits >= this.diff.splitsPerStage * next) {
-        this.stageIndex = next;
+      if (this.transition || next >= STAGES.length) return;
+      if (this.splits >= this.diff.splitsPerStage * next) this.beginTransition(next);
+    }
+
+    // 진 완료 연출 시작: 남은 숫자는 벌칙 없이 흩어지고, 완료 메시지 뒤 화면이 어두워졌다가 새 배경으로 밝아진다
+    beginTransition(next) {
+      this.transition = { to: next, t: 0 };
+      this.stageBanner.until = 0;
+      for (const n of this.numbers) {
+        if (n.dead) continue;
+        n.dead = true;
+        this.spawnSparks(n.x, n.y, "#ffd166", 10);
+      }
+      if (window.Sound) Sound.play("stage");
+    }
+
+    updateTransition(dt) {
+      const tr = this.transition;
+      const before = tr.t;
+      tr.t += dt * 1000;
+      // 어두워진 순간에 배경/진 교체
+      if (before < TRANS_HOLD + TRANS_OUT && tr.t >= TRANS_HOLD + TRANS_OUT) {
+        this.stageIndex = tr.to;
         this.stageStart = this.elapsed;
-        if (window.Sound) Sound.play("stage");
-        this.showBanner(next);
+        this.numbers = [];
+        this.showBanner(tr.to);
         this.emit("stage", this.stageInfo());
       }
+      if (tr.t >= TRANS_HOLD + TRANS_OUT + TRANS_IN) {
+        this.transition = null;
+        this.spawnTimer = 500;
+      }
+    }
+
+    // 전환 중 화면 덮개 진하기 0~1
+    transitionDim() {
+      const tr = this.transition; if (!tr) return 0;
+      if (tr.t < TRANS_HOLD) return 0;
+      if (tr.t < TRANS_HOLD + TRANS_OUT) return (tr.t - TRANS_HOLD) / TRANS_OUT;
+      return 1 - (tr.t - TRANS_HOLD - TRANS_OUT) / TRANS_IN;
     }
 
     endGame() {
@@ -523,10 +559,12 @@
         this.showText("왜군 총공세!", "점점 빨라집니다. 버텨 보세요!");
       }
 
-      // 생성
+      if (this.transition) this.updateTransition(dt);
+
+      // 생성 (전환 중에는 쉼)
       this.spawnTimer -= dt * 1000;
       const alive = this.numbers.filter((n) => !n.dead).length;
-      if (this.spawnTimer <= 0 && alive < this.maxOnScreen()) {
+      if (!this.transition && this.spawnTimer <= 0 && alive < this.maxOnScreen()) {
         this.spawnNumber();
         this.spawnTimer = this.currentSpawnInterval() * rand(0.8, 1.2);
       } else if (alive === 0 && this.spawnTimer > 400) {
@@ -659,7 +697,7 @@
 
       // 스테이지 배너
       if (this.stageBanner && now < this.stageBanner.until) {
-        const remain = (this.stageBanner.until - now) / 2200;
+        const remain = (this.stageBanner.until - now) / (this.stageBanner.dur || 2200);
         const alpha = remain > 0.85 ? (1 - remain) / 0.15 : remain < 0.25 ? remain / 0.25 : 1;
         ctx.save();
         ctx.globalAlpha = alpha;
@@ -674,6 +712,33 @@
         ctx.lineWidth = 4; ctx.strokeText(this.stageBanner.sub, W / 2, H * 0.51);
         ctx.fillStyle = "#ffffff"; ctx.fillText(this.stageBanner.sub, W / 2, H * 0.51);
         ctx.restore();
+      }
+
+      // 진 완료 연출
+      if (this.transition) {
+        const tr = this.transition;
+        const dim = this.transitionDim();
+        if (dim > 0) { ctx.fillStyle = "rgba(8, 5, 10," + dim + ")"; ctx.fillRect(0, 0, W, H); }
+        if (tr.t < TRANS_HOLD + TRANS_OUT) {
+          const done = STAGES[tr.to - 1];
+          const k = Math.min(1, tr.t / 250);                 // 튀어나오는 느낌
+          const scale = 0.8 + 0.2 * k;
+          ctx.save();
+          ctx.globalAlpha = tr.t > TRANS_HOLD ? 1 - (tr.t - TRANS_HOLD) / TRANS_OUT : k;
+          ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, H * 0.34, W, H * 0.24);
+          ctx.translate(W / 2, H * 0.46); ctx.scale(scale, scale);
+          ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+          ctx.font = "bold " + Math.round(this.unit * 0.075) + "px 'Jua', sans-serif";
+          ctx.lineWidth = 6; ctx.strokeStyle = COLORS.stroke;
+          ctx.strokeText(done.done, 0, -this.unit * 0.05);
+          ctx.fillStyle = "#8fe36b"; ctx.fillText(done.done, 0, -this.unit * 0.05);
+          ctx.font = Math.round(this.unit * 0.045) + "px 'Gowun Dodum', sans-serif";
+          ctx.lineWidth = 4;
+          const sub = "제" + tr.to + "진 완료 · 다음 전장으로 출발!";
+          ctx.strokeText(sub, 0, this.unit * 0.04);
+          ctx.fillStyle = "#ffffff"; ctx.fillText(sub, 0, this.unit * 0.04);
+          ctx.restore();
+        }
       }
 
       if (this.over) {

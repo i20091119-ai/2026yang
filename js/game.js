@@ -375,7 +375,7 @@
       for (const n of this.numbers) {
         if (n.dead || n.bounced) continue; // 이미 튕겨낸 소수는 다시 베이지 않는다
         if (n.bornStroke === this.strokeId) continue; // 같은 획으로 생긴 조각은 새 획으로만 벨 수 있다
-        if (this.elapsed - n.born < 350) continue; // 생성 직후 잠깐은 보호
+        if (this.elapsed - n.born < 500) continue; // 생성 직후 0.5초는 보호
         if (segmentHitsCircle(ax, ay, bx, by, n.x, n.y, n.r)) {
           this.cut(n, ax, ay, bx, by);
         }
@@ -402,15 +402,16 @@
       this.score += gained;
       this.splits += 1;
 
-      // 조각 두 개: 베인 방향과 수직으로 튀어나감
-      const push = this.unit * 0.55;
-      const nx = -Math.sin(angle), ny = Math.cos(angle);
-      const upward = Math.min(n.vy, 0) - this.unit * 0.35;
-      const left = this.makeNumber(a, n.x - nx * 10, n.y - ny * 10, n.vx - nx * push * 0.5 + rand(-40, 40), upward);
-      const right = this.makeNumber(b, n.x + nx * 10, n.y + ny * 10, n.vx + nx * push * 0.5 + rand(-40, 40), upward);
-      // 화면 안으로 살짝 당기기
+      // 조각 두 개: 좌우로 확실히 갈라지고, 위로 뜨는 힘도 서로 다르게 해서 겹치지 않게 한다
+      const side = this.unit * 0.6;                       // 수평 분리 속도
+      const nx = -Math.sin(angle), ny = Math.cos(angle);  // 베인 방향의 수직 성분 (약간만 섞음)
+      const baseUp = Math.min(n.vy, 0);
+      const left = this.makeNumber(a, n.x - 28, n.y - 10, -side + nx * this.unit * 0.15 + rand(-30, 30), baseUp - this.unit * 0.42);
+      const right = this.makeNumber(b, n.x + 28, n.y - 10, side - nx * this.unit * 0.15 + rand(-30, 30), baseUp - this.unit * 0.26 + ny * this.unit * 0.05);
+      // 화면 밖으로 나가지 않게만 살짝 당기기
       const cx = this.W / 2;
-      left.vx += (cx - left.x) * 0.2; right.vx += (cx - right.x) * 0.2;
+      if (left.x < this.W * 0.3) left.vx += (cx - left.x) * 0.5;
+      if (right.x > this.W * 0.7) right.vx += (cx - right.x) * 0.5;
       left.bornStroke = this.strokeId; right.bornStroke = this.strokeId;
       this.numbers.push(left, right);
 

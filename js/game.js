@@ -79,6 +79,7 @@
       this.lastPointer = null;
       this.swordImages = SWORDS.map((_, i) => { const img = new Image(); img.src = "assets/ui/sword-" + (i + 1) + ".png"; return img; });
       this.sword = { x: 0, y: 0, angle: -0.6, lastMove: 0 };
+      this.swing = null; this.downPos = null;
       this.stageImages = STAGES.map((st) => {
         const img = new Image();
         img.onload = () => { if (this.running) this.render(performance.now()); };
@@ -197,7 +198,11 @@
         this.lastPointer = p;
         this.trail.push({ x: p.x, y: p.y, t: performance.now() });
         this.sword.x = p.x; this.sword.y = p.y; this.sword.lastMove = performance.now();
-        this.slice(p.x, p.y, p.x, p.y);
+        this.downPos = p;
+        // 탭 한 번: 그 자리에서 칼을 휘두른다 (짧은 대각선으로 베기 판정)
+        this.swing = { x: p.x, y: p.y, start: performance.now() };
+        const r = this.unit * 0.16;
+        this.slice(p.x + r, p.y - r, p.x - r, p.y + r);
       });
       cv.addEventListener("pointermove", (e) => {
         if (!this.running || this.paused || !this.pointerDown) return;
@@ -205,6 +210,10 @@
         const q = this.lastPointer || p;
         this.trail.push({ x: p.x, y: p.y, t: performance.now() });
         const dx = p.x - q.x, dy = p.y - q.y;
+        if (this.swing && this.downPos) {
+          const mx = p.x - this.downPos.x, my = p.y - this.downPos.y;
+          if (mx * mx + my * my > 150) this.swing = null; // 끌기 시작 → 휘두르기 취소
+        }
         if (dx * dx + dy * dy > 4) this.sword.angle = Math.atan2(dy, dx);
         this.sword.x = p.x; this.sword.y = p.y; this.sword.lastMove = performance.now();
         this.slice(q.x, q.y, p.x, p.y);
@@ -670,8 +679,33 @@
         ctx.restore();
       }
 
+      // 탭 한 번: 그 자리에서 칼을 휘두르는 모션 (0.26초)
+      const SWING_MS = 260;
+      let swinging = false;
+      if (this.swing) {
+        const age = now - this.swing.start;
+        if (age < SWING_MS) {
+          swinging = true;
+          const k = age / SWING_MS, ease = 1 - Math.pow(1 - k, 3);
+          const a0 = -1.9, a1 = 0.55;                    // 오른쪽 위에서 왼쪽 아래로 내려베기
+          const ang = a0 + (a1 - a0) * ease;
+          const L = this.unit * 0.34;
+          // 베기 궤적 호
+          ctx.save();
+          ctx.globalAlpha = 1 - k;
+          ctx.strokeStyle = COLORS.bladeGlow; ctx.lineWidth = 10; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.arc(this.swing.x, this.swing.y, L * 0.5, a0, ang, false); ctx.stroke();
+          ctx.strokeStyle = COLORS.blade; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(this.swing.x, this.swing.y, L * 0.5, a0, ang, false); ctx.stroke();
+          ctx.restore();
+          this.drawSword(ctx, this.swing.x, this.swing.y, ang, this.swordTier(), L, 1);
+        } else {
+          this.swing = null;
+        }
+      }
+
       // 손끝을 따라가는 칼 (긋는 동안, 손을 뗀 뒤 0.35초까지 서서히 사라짐)
-      {
+      if (!swinging) {
         const age = now - this.sword.lastMove;
         if (this.pointerDown || age < 350) {
           const alpha = this.pointerDown ? 1 : 1 - age / 350;
@@ -679,16 +713,17 @@
         }
       }
 
-      // 현재 칼 표시 (상단 중앙)
+      // 현재 칼 표시 (오른쪽 위, 배수·목숨 표시 바로 왼쪽)
       {
         const tier = this.swordTier();
-        const L = Math.min(96, this.unit * 0.26);
-        this.drawSword(ctx, W / 2 - L * 0.12, 42, -0.5, tier, L, 0.95);
+        const L = Math.min(88, this.unit * 0.24);
+        const cx = W - 118 - L * 0.5;
+        this.drawSword(ctx, cx - L * 0.12, 40, -0.5, tier, L, 0.95);
         ctx.save();
         ctx.font = "bold 13px 'Jua', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
         ctx.lineWidth = 3; ctx.strokeStyle = COLORS.stroke; ctx.lineJoin = "round";
-        ctx.strokeText(SWORDS[tier].name, W / 2, 62);
-        ctx.fillStyle = "#ffd166"; ctx.fillText(SWORDS[tier].name, W / 2, 62);
+        ctx.strokeText(SWORDS[tier].name, cx, 60);
+        ctx.fillStyle = "#ffd166"; ctx.fillText(SWORDS[tier].name, cx, 60);
         ctx.restore();
       }
 

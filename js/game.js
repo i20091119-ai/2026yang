@@ -405,17 +405,18 @@
       this.score += gained;
       this.splits += 1;
 
-      // 조각 두 개: 좌우로 확실히 갈라지고, 위로 뜨는 힘도 서로 다르게 해서 겹치지 않게 한다
-      const side = this.unit * 0.6;                       // 수평 분리 속도
-      const nx = -Math.sin(angle), ny = Math.cos(angle);  // 베인 방향의 수직 성분 (약간만 섞음)
+      // 조각 두 개: 살짝 좌우로 벌어지면서 위로 튀어 오른다 (한 조각이 조금 더 높이)
+      const side = this.unit * 0.17;                      // 수평 분리 속도 (완만하게)
+      const nx = -Math.sin(angle);
       const baseUp = Math.min(n.vy, 0);
-      const left = this.makeNumber(a, n.x - 28, n.y - 10, -side + nx * this.unit * 0.15 + rand(-30, 30), baseUp - this.unit * 0.42);
-      const right = this.makeNumber(b, n.x + 28, n.y - 10, side - nx * this.unit * 0.15 + rand(-30, 30), baseUp - this.unit * 0.26 + ny * this.unit * 0.05);
+      const left = this.makeNumber(a, n.x - 22, n.y - 8, -side + nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.95);
+      const right = this.makeNumber(b, n.x + 22, n.y - 8, side - nx * this.unit * 0.06 + rand(-20, 20), baseUp - this.unit * 0.82);
       // 화면 밖으로 나가지 않게만 살짝 당기기
       const cx = this.W / 2;
-      if (left.x < this.W * 0.3) left.vx += (cx - left.x) * 0.5;
-      if (right.x > this.W * 0.7) right.vx += (cx - right.x) * 0.5;
+      if (left.x < this.W * 0.25) left.vx += (cx - left.x) * 0.4;
+      if (right.x > this.W * 0.75) right.vx += (cx - right.x) * 0.4;
       left.bornStroke = this.strokeId; right.bornStroke = this.strokeId;
+      left.piece = true; right.piece = true;
       this.numbers.push(left, right);
 
       this.spawnSparks(n.x, n.y, COLORS.good, 14);
@@ -576,6 +577,7 @@
       for (const n of this.numbers) {
         if (n.dead) continue;
         n.vy += g * dt;
+        if (n.piece) n.vx *= Math.pow(0.3, dt); // 조각은 좌우 이동이 금방 잦아든다
         n.x += n.vx * dt; n.y += n.vy * dt;
         n.rot += n.vrot * dt;
         // 옆 벽에 살짝 튕김

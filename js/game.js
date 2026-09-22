@@ -12,11 +12,12 @@
   // 스테이지: 안이명 장군의 전투 경로. 소수를 베었을 때의 벌칙이 점점 강해진다.
   // bg: assets/bg/ 에 해당 파일이 있으면 그 그림을 배경으로 쓰고, 없으면 코드로 그린 배경을 쓴다.
   const STAGES = [
-    { name: "양산", primePenalty: "none",  hint: "소수는 그냥 보내세요",           bg: "assets/bg/stage-1-yangsan.jpg",  done: "양산성을 지켜냈다!" },
-    { name: "밀양", primePenalty: "none",  hint: "소수를 잘 구분해 보세요",        bg: "assets/bg/stage-2-miryang.jpg",  done: "밀양의 왜군을 물리쳤다!" },
-    { name: "청도", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-3-cheongdo.jpg", done: "청도 골짜기를 돌파했다!" },
-    { name: "울산", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-4-ulsan.jpg",    done: "울산 왜성을 무찔렀다!" },
-    { name: "대구", primePenalty: "life",  hint: "소수를 베면 목숨을 잃습니다!",   bg: "assets/bg/stage-5-daegu.jpg",    done: "대구 들판을 지켜냈다!" },
+  // focus: 세로 화면처럼 배경을 잘라야 할 때 화면에 남겨 둘 기준점 (그림 가로 비율 0~1). 지역명 깃발이 있는 쪽.
+    { name: "양산", primePenalty: "none",  hint: "소수는 그냥 보내세요",           bg: "assets/bg/stage-1-yangsan.jpg",  done: "양산성을 지켜냈다!",       focus: 0.13 },
+    { name: "밀양", primePenalty: "none",  hint: "소수를 잘 구분해 보세요",        bg: "assets/bg/stage-2-miryang.jpg",  done: "밀양의 왜군을 물리쳤다!",   focus: 0.2 },
+    { name: "청도", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-3-cheongdo.jpg", done: "청도 골짜기를 돌파했다!",   focus: 0.9 },
+    { name: "울산", primePenalty: "score", hint: "소수를 베면 감점!",              bg: "assets/bg/stage-4-ulsan.jpg",    done: "울산 왜성을 무찔렀다!",     focus: 0.11 },
+    { name: "대구", primePenalty: "life",  hint: "소수를 베면 목숨을 잃습니다!",   bg: "assets/bg/stage-5-daegu.jpg",    done: "대구 들판을 지켜냈다!",     focus: 0.22 },
   ];
 
   // 칼 등급: 진(스테이지)이 오를 때마다 한 단계씩. assets/ui/sword-N.png 가 있으면 그 그림을 쓴다.
@@ -171,7 +172,10 @@
         const W = this.W, H = this.H;
         const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
         const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
-        ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        // 가로가 잘릴 때는 깃발(기준점)이 화면 안에 오도록 자른다
+        const focus = STAGES[stageIndex].focus != null ? STAGES[stageIndex].focus : 0.5;
+        const dx = clamp(W / 2 - focus * dw, W - dw, 0);
+        ctx.drawImage(img, dx, (H - dh) / 2, dw, dh);
         // 숫자가 잘 보이도록 살짝 어둡게
         ctx.fillStyle = "rgba(0, 0, 0, 0.28)"; ctx.fillRect(0, 0, W, H);
       } else if (this.bg) {

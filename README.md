@@ -84,6 +84,10 @@ python3 -m http.server 8080
 anon 키는 브라우저에 공개되는 키입니다. 테이블에 수정·삭제 정책이 없으므로 이 키로는 점수를 읽고 추가하는 것만 가능합니다.
 설정하지 않으면 점수는 각 브라우저의 localStorage 에만 저장됩니다.
 
+무료 프로젝트는 일주일간 요청이 없으면 자동 일시정지됩니다. `.github/workflows/keepalive.yml` 이 12시간마다,
+그리고 푸시할 때마다 순위표를 한 번 읽어 깨어 있게 합니다. 일시정지되면 대시보드에서 **Restore project** 를 누르면 됩니다.
+Actions 탭의 "Keep Supabase awake" 결과가 초록색이면 서버가 정상(HTTP 200)이라는 뜻입니다.
+
 ## 파일 구조
 
 ```

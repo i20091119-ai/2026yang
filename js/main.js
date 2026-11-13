@@ -147,7 +147,9 @@
   function noteFor(top, sub) {
     if (top.source === "remote" && (!sub || sub.source === "remote")) return "전체 공용 순위표 · 이름은 기록하지 않습니다";
     if (!ScoreStore.configured()) return "이 기기의 기록만 보입니다 (공용 순위표 미설정)";
-    return "연결에 실패해 이 기기의 기록만 보입니다";
+    const why = (top.error || (sub && sub.error) || "").replace(/^TypeError:\s*/, "");
+    const where = location.protocol === "file:" ? " · 오프라인 사본" : "";
+    return "연결에 실패해 이 기기의 기록만 보입니다" + (why ? " (" + why + ")" : "") + where;
   }
 
   async function renderRanking(diff) {
@@ -163,6 +165,7 @@
   $$("#ranking-tabs .tab").forEach((t) => {
     t.addEventListener("click", () => renderRanking(t.getAttribute("data-diff")));
   });
+  $("#ranking-reload").addEventListener("click", () => renderRanking(currentDiff));
 
   // ----- 게임 방법 슬라이드 -----
   const howtoSlides = $$("#howto-slides .howto-slide");

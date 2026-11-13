@@ -53,13 +53,21 @@
   }
 
   // ---- Supabase REST ----
+  // 네트워크가 잠깐 끊겼을 때를 대비해 한 번 더 시도한다
+  async function withRetry(fn) {
+    try { return await fn(); }
+    catch (e) { await new Promise((r) => setTimeout(r, 1200)); return fn(); }
+  }
+
   async function remoteSubmit(difficulty, score) {
-    const res = await fetch(endpoint(), {
-      method: "POST",
-      headers: Object.assign({ Prefer: "return=minimal" }, headers()),
-      body: JSON.stringify({ difficulty, score }),
+    return withRetry(async () => {
+      const res = await fetch(endpoint(), {
+        method: "POST",
+        headers: Object.assign({ Prefer: "return=minimal" }, headers()),
+        body: JSON.stringify({ difficulty, score }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
     });
-    if (!res.ok) throw new Error("submit failed: " + res.status);
   }
 
   async function remoteTop(difficulty, limit) {
@@ -68,9 +76,11 @@
       "&difficulty=eq." + encodeURIComponent(difficulty) +
       "&order=score.desc,created_at.asc" +
       "&limit=" + limit;
-    const res = await fetch(url, { headers: headers() });
-    if (!res.ok) throw new Error("fetch failed: " + res.status);
-    return res.json();
+    return withRetry(async () => {
+      const res = await fetch(url, { headers: headers() });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    });
   }
 
   // ---- 공개 API ----

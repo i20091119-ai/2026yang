@@ -167,6 +167,39 @@
   });
   $("#ranking-reload").addEventListener("click", () => renderRanking(currentDiff));
 
+  // 연결 진단: 순위표 안내 문구를 누르면 어느 서버까지 닿는지 확인해서 보여 준다
+  async function probe(label, url, opts) {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(url, Object.assign({ cache: "no-store" }, opts || {}));
+      return label + ": HTTP " + res.status + " (" + (Date.now() - t0) + "ms)";
+    } catch (e) {
+      return label + ": 실패 (" + String(e.message || e) + ")";
+    }
+  }
+  async function runDiagnostics() {
+    const box = $("#ranking-note");
+    box.textContent = "연결 진단 중…";
+    const c = window.CONFIG || {};
+    const base = (c.SUPABASE_URL || "").replace(/\/$/, "");
+    const lines = [];
+    lines.push("주소: " + location.protocol + "//" + location.host);
+    lines.push("기기: " + navigator.userAgent.replace(/^Mozilla\/5\.0 \(/, "(").slice(0, 110));
+    lines.push(await probe("이 사이트", "js/config.js"));
+    lines.push(await probe("GitHub", "https://api.github.com/"));
+    if (base) {
+      lines.push(await probe("Supabase 기본", base + "/rest/v1/"));
+      lines.push(await probe("Supabase 키 포함", base + "/rest/v1/" + (c.TABLE || "scores") + "?select=score&limit=1", {
+        headers: { apikey: c.SUPABASE_ANON_KEY, Authorization: "Bearer " + c.SUPABASE_ANON_KEY },
+      }));
+    } else {
+      lines.push("Supabase: 설정 없음");
+    }
+    box.innerHTML = lines.map((l) => "<div>" + l.replace(/</g, "&lt;") + "</div>").join("");
+  }
+  $("#ranking-note").addEventListener("click", runDiagnostics);
+  $("#ranking-note").style.cursor = "pointer";
+
   // ----- 게임 방법 슬라이드 -----
   const howtoSlides = $$("#howto-slides .howto-slide");
   let howtoIndex = 0;

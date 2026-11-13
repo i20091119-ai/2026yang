@@ -187,7 +187,9 @@ body { position: fixed; inset: 0; overscroll-behavior: none; }
 .rank-list li:nth-child(2) .rank-no { color: #e6e6e6; }
 .rank-list li:nth-child(3) .rank-no { color: #d9a066; }
 .rank-loading, .rank-empty { justify-content: center !important; font-size: 15px !important; color: #cfc2b4; font-family: var(--font-body) !important; }
-.rank-note { font-size: 13px; color: #cfc2b4; margin-bottom: 12px; }
+.rank-note { font-size: 13px; color: #cfc2b4; margin-bottom: 12px; text-align: left; line-height: 1.5; word-break: break-all; }
+#ranking-note { text-align: center; }
+#ranking-note div { text-align: left; }
 
 /* ---------- 게임 오버 ---------- */
 .gameover-panel { max-width: 560px; }

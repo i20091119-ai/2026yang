@@ -1,0 +1,25 @@
+# Supabase 무료 프로젝트는 7일간 요청이 없으면 일시정지된다.
+# 12시간마다 순위표를 한 번 읽어서 멈추지 않게 한다. (anon 키는 js/config.js 에 이미 공개된 키)
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 */12 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read leaderboard once
+        run: |
+          URL=$(grep -o 'SUPABASE_URL: "[^"]*"' js/config.js | cut -d'"' -f2)
+          KEY=$(grep -o 'SUPABASE_ANON_KEY: "[^"]*"' js/config.js | cut -d'"' -f2)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Supabase 설정 없음"; exit 0; fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            "$URL/rest/v1/scores?select=score&limit=1")
+          echo "HTTP $code"
+          # 프로젝트가 일시정지 상태면 5xx 가 온다. 대시보드에서 Restore 가 필요하다.
+          [ "$code" = "200" ]

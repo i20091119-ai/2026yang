@@ -6,6 +6,8 @@ on:
   schedule:
     - cron: "17 */12 * * *"
   workflow_dispatch:
+  push:
+    branches: [claude/brave-hypatia-90oo0t, main]
 
 jobs:
   ping:

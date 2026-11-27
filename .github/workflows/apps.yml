@@ -32,11 +32,22 @@ jobs:
       - name: Build
         working-directory: desktop
         run: npm run dist
+      # 윈도우 7 / 32비트용: 윈도우 7 을 지원하는 마지막 Electron(22) 으로 ia32 빌드
+      - name: Build for Windows 7 (32-bit)
+        working-directory: desktop
+        shell: bash
+        run: >
+          npx electron-builder --win --ia32 --publish never
+          -c.electronVersion=22.3.27
+          -c.directories.output=dist-win7
+          -c.nsis.artifactName='BaekhoGeneral-Win7-32bit-Setup-${version}.${ext}'
+          -c.portable.artifactName='BaekhoGeneral-Win7-32bit-Portable-${version}.${ext}'
       - uses: actions/upload-artifact@v4
         with:
           name: windows
           path: |
             desktop/dist/*.exe
+            desktop/dist-win7/*.exe
           if-no-files-found: error
 
   android:
@@ -82,11 +93,15 @@ jobs:
           cat > notes.md <<'NOTES'
           커밋 ${{ github.sha }} 기준 자동 빌드입니다.
 
-          - **BaekhoGeneral-Setup-*.exe**: 윈도우 설치판 (바탕화면 바로가기 생성)
-          - **BaekhoGeneral-Portable-*.exe**: 윈도우 무설치판 (그냥 실행)
+          - **BaekhoGeneral-Setup-*.exe**: 윈도우 10/11 (64비트) 설치판 (바탕화면 바로가기 생성)
+          - **BaekhoGeneral-Portable-*.exe**: 윈도우 10/11 (64비트) 무설치판 (그냥 실행)
+          - **BaekhoGeneral-Win7-32bit-Setup-*.exe**: 윈도우 7/8, 32비트 PC 설치판 (64비트 PC 에서도 동작)
+          - **BaekhoGeneral-Win7-32bit-Portable-*.exe**: 윈도우 7/8, 32비트 PC 무설치판
           - **BaekhoGeneral-*.apk**: 안드로이드 태블릿/폰용
 
           앱은 인터넷이 되면 항상 웹의 최신 버전을 불러오므로, 게임 내용이 바뀌어도 다시 설치할 필요가 없습니다.
           NOTES
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest --title "최신 빌드 #${{ github.run_number }}" --notes-file notes.md out/windows/*.exe out/android/*.apk
+          mapfile -t FILES < <(find out -type f \( -name '*.exe' -o -name '*.apk' \) | sort)
+          printf '%s\n' "${FILES[@]}"
+          gh release create latest --title "최신 빌드 #${{ github.run_number }}" --notes-file notes.md "${FILES[@]}"

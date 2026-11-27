@@ -53,8 +53,10 @@ python3 -m http.server 8080
 
 | 파일 | 용도 |
 | --- | --- |
-| `BaekhoGeneral-Setup-*.exe` | 윈도우 설치판. 실행하면 설치되고 바탕화면에 "백호장군 안이명" 바로가기가 생깁니다. |
-| `BaekhoGeneral-Portable-*.exe` | 윈도우 무설치판. USB 등에 넣고 그냥 실행하면 됩니다. |
+| `BaekhoGeneral-Setup-*.exe` | 윈도우 10/11 (64비트) 설치판. 실행하면 설치되고 바탕화면에 "백호장군 안이명" 바로가기가 생깁니다. |
+| `BaekhoGeneral-Portable-*.exe` | 윈도우 10/11 (64비트) 무설치판. USB 등에 넣고 그냥 실행하면 됩니다. |
+| `BaekhoGeneral-Win7-32bit-Setup-*.exe` | 윈도우 7/8 또는 32비트 PC 용 설치판. 64비트 PC 에서도 동작합니다. |
+| `BaekhoGeneral-Win7-32bit-Portable-*.exe` | 윈도우 7/8 또는 32비트 PC 용 무설치판. |
 | `BaekhoGeneral-*.apk` | 안드로이드 태블릿·폰. 파일을 열어 설치합니다("출처를 알 수 없는 앱" 허용 필요). |
 
 윈도우에서 F11 을 누르면 전체 화면이 됩니다. 스마트스크린 경고가 뜨면 "추가 정보 → 실행"을 누르면 됩니다(코드 서명 인증서가 없어서 뜨는 경고입니다).
@@ -70,6 +72,8 @@ python3 -m http.server 8080
 오프라인 사본까지 최신으로 맞추고 싶을 때만 새 파일을 받아 다시 설치하면 됩니다.
 
 - 윈도우 앱: `desktop/` (Electron). 로컬에서 만들려면 `cd desktop && npm install && npm run dist`.
+- 윈도우 7 / 32비트용은 같은 코드를 윈도우 7 을 지원하는 마지막 Electron(22.3.27, 크롬 108 기반)으로 빌드한 것입니다.
+  인증서가 오래된 윈도우 7 PC 에서는 온라인 접속이 실패할 수 있는데, 그때는 앱에 담긴 사본으로 자동 실행되고 순위표는 그 PC 기록만 보입니다.
 - 안드로이드 앱: `android/` (WebView). 로컬에서 만들려면 Android SDK 를 설치한 뒤 `gradle -p android assembleRelease`.
 - `android/keystore/baekho.jks` 는 APK 서명용 키입니다. 스토어 배포용이 아니라 같은 키로 서명해야 덮어쓰기 설치가 되기 때문에 저장소에 함께 둡니다.
 
